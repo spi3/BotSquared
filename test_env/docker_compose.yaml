@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  teamspeak:
+    image: teamspeak
+    container_name: teamspeak
+    ports:
+      - "9987:9987/udp"
+      - "10011:10011"
+      - "30033:30033"
+    environment:
+      TS3SERVER_LICENSE: accept
+
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
