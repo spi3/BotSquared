@@ -57,7 +57,11 @@ class Teamspeak(ChatBot):
 
     def run(self):
         # Connect to the server
-        self.__connect()
+        try:
+            self.__connect()
+        except Exception as e:
+            self.logger.error(f"{self.name} - Failed to connect to server: {e}")
+            return
 
         timeouts = 0
         while True:
@@ -101,3 +105,8 @@ class Teamspeak(ChatBot):
             self.chat_channel_name = self.config['chat_channel_name']
         else:
             self.chat_channel_name = self.default_config['chat_channel_name']
+
+        if 'name' in self.config:
+            self.name = self.config['name']
+        else:
+            self.name = self.default_config['name']
