@@ -1,0 +1,20 @@
+
+name: Teamspeak_Plugin
+iteration_rate_hz: 1
+ts3_server_ip: 
+ts3_server_query_username: MyTSBot
+ts3_server_query_passwd: MyTSBotPassword
+ts3_server_id: 1  # The virtual ID of the server to connect to, usually 1 unless you have multiple virtual servers
+chat_channel_name: "MyBotChannel"
+
+integrations:
+    integration_1:
+    integration_2:
+    
+command_prefix: '!'
+commands:
+    help:
+        response: Sorry, no commands have been set up for this plugin yet!
+
+new_user_message: "Welcome!"
+new_user_inform_group: "Server Admin"

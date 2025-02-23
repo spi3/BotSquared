@@ -1,0 +1,8 @@
+# This file contains the defaults for all the config variables
+# A blank indicates there is no default value, 
+# a custom value is required
+
+log_level: INFO
+log_file: bot.log
+
+plugins:

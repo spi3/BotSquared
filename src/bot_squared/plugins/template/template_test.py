@@ -1,5 +1,7 @@
 import unittest
-from plugins.template.template import Template
+
+from bot_squared.plugins.template import Template
+
 
 class TestTemplate(unittest.TestCase):
     def test_create(self):
