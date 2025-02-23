@@ -1,3 +1,0 @@
-pyyaml
-ts3
-flake8
