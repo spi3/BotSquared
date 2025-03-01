@@ -5,20 +5,19 @@ import time
 import ts3
 import ts3.definitions
 import yaml
-import bot_squared.integrator
-
-from bot_squared.interfaces.chat_plugin import ChatPlugin
-import bot_squared.integrator as integrator
+from bot_squared.integrator import integrates
 
 MAX_TIMEOUTS: int = 5
 
 
-class Teamspeak(ChatPlugin):
-    def __init__(self, config: dict, loaded_plugins: dict):
-        super().__init__(config=config if config is not None else {},
-                         loaded_plugins=loaded_plugins if loaded_plugins is not None else {},
-                         logger=logging.getLogger(__name__))
+class Teamspeak:
+    """Teamspeak plugin"""
 
+    def __init__(self, plugin_name: str, config: dict):
+        self.plugin_name = plugin_name
+        self.config = config
+
+        self.logger = logging.getLogger(__name__)
         self.default_config = None
 
         # Config fields
@@ -26,10 +25,7 @@ class Teamspeak(ChatPlugin):
 
         self.logger.info('Teamspeak initializing...')
 
-        # Hack to ensure config is not None
-        if self.config is None:
-            self.config = {}
-        self.__load_config()
+        self.load_config()
 
     def __connect(self):
         # Connect to the server
@@ -37,8 +33,7 @@ class Teamspeak(ChatPlugin):
 
         # Authenticate with the server
         self.ts3conn.login(
-            client_login_name=self.ts3_server_query_username,
-            client_login_password=self.ts3_server_query_passwd
+            client_login_name=self.ts3_server_query_username, client_login_password=self.ts3_server_query_passwd
         )
 
         # Join the server
@@ -124,16 +119,16 @@ class Teamspeak(ChatPlugin):
             joining_user_groups = joining_user_groups.split(',')
 
         if len(joining_user_groups) == 1:
-
             # If user only has one group upon joining, and that
             # group is the guest group, then send them a welcome message
             for group in self.ts3conn.servergrouplist():
                 if group['sgid'] == joining_user_groups[0] and group['name'] == 'Guest':
-                    self.ts3conn.sendtextmessage(targetmode=ts3.definitions.TextMessageTargetMode.CLIENT,
+                    self.ts3conn.sendtextmessage(
+                        targetmode=ts3.definitions.TextMessageTargetMode.CLIENT,
                         target=event['clid'],
-                        msg=f'{self.config.new_user_message}')
+                        msg=f'{self.config.new_user_message}',
+                    )
                     return
-
 
     def process_msg_event(self, event):
         msg = event['msg']
@@ -152,16 +147,15 @@ class Teamspeak(ChatPlugin):
             return
 
         if 'response' in self.commands[command]:
-            self.ts3conn.sendtextmessage(targetmode=event['targetmode'],
-                target=self.channel_id,
-                msg=self.commands[command]['response'])
+            self.ts3conn.sendtextmessage(
+                targetmode=event['targetmode'], target=self.channel_id, msg=self.commands[command]['response']
+            )
         else:
             # Command has no response
             # Do w/e else needs to be done
             pass
 
-
-    def __load_config(self):
+    def load_config(self):
         # Load the default config
         with open('teamspeak_default_config.yaml') as default_config_file:
             self.default_config = yaml.safe_load(default_config_file)

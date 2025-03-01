@@ -1,5 +1,5 @@
 from bot_squared.plugins.teamspeak.teamspeak import Teamspeak
 
 
-def create_plugin(config: dict, loaded_plugins: dict):
-    return Teamspeak(config=config, loaded_plugins=loaded_plugins)
+def create_plugin(plugin_name: str, config: dict):
+    return Teamspeak(plugin_name=plugin_name, config=config)

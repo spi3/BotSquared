@@ -5,7 +5,8 @@ import time
 from typing import Optional
 
 import yaml
-from plugins.plugin import Plugin
+
+from bot_squared.plugins.plugin import Plugin
 
 
 def main(args: Optional[argparse.Namespace] = None):
@@ -36,10 +37,8 @@ def main(args: Optional[argparse.Namespace] = None):
         logger.error('No default config found')
         return
 
-    log_level = (config['log_level'] if 'log_level' in config
-                 else default_config['log_level'])
-    log_file = (config['log_file'] if 'log_file' in config
-                else default_config['log_file'])
+    log_level = config['log_level'] if 'log_level' in config else default_config['log_level']
+    log_file = config['log_file'] if 'log_file' in config else default_config['log_file']
 
     # Configure logging
     log_level = convert_log_level(log_level)
@@ -49,7 +48,8 @@ def main(args: Optional[argparse.Namespace] = None):
     # Get the plugins from config
     if config['plugins'] is None:
         logger.error(
-            'No plugins found in config. Please update your config to include the plugins you want to run. Thank you.')
+            'No plugins found in config. Please update your config to include the plugins you want to run. Thank you.'
+        )
         return
     plugins = config['plugins']
     logger.debug(f'Plugins - {plugins}')
@@ -68,10 +68,8 @@ def main(args: Optional[argparse.Namespace] = None):
 
         # Load the plugin
         loaded_plugins[plugin_name] = Plugin(
-                                        plugin_name=plugin_name,
-                                        plugin_type=plugin_type,
-                                        plugin_conf=plugins[plugin_name],
-                                        loaded_plugins=loaded_plugins)
+            plugin_name=plugin_name, plugin_type=plugin_type, plugin_conf=plugins[plugin_name]
+        )
 
     plugin_active = True
     while plugin_active:
@@ -121,8 +119,7 @@ def convert_log_level(level: str):
 if __name__ == '__main__':
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Bot Squared')
-    parser.add_argument('--config', type=str, default='config.yaml',
-                        help='Path to the config file')
+    parser.add_argument('--config', type=str, default='config.yaml', help='Path to the config file')
     args = parser.parse_args()
 
     main(args)

@@ -11,8 +11,3 @@ services:
     environment:
       TS3SERVER_LICENSE: accept
 
-  redis:
-    image: redis
-    container_name: redis
-    ports:
-      - "6379:6379"

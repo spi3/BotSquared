@@ -53,17 +53,27 @@ mypy-args = [
 [tool.hatch.envs.check]
 extra-dependencies = [
   "mypy>=1.0.0",
-  "ruff"
+  "ruff",
+  "pytest"
 ]
 
 [tool.hatch.envs.check.scripts]
-fix = "ruff check --fix"
+fix-all = "ruff check --fix"
+fix-format = "ruff format ."
 types = "mypy --install-types --non-interactive {args:src/bot_squared tests}"
 format = "ruff check"
 all = [
   "types",
   "format",
 ]
+fix = [
+  "fix-sort",
+  "fix-format",
+  "fix-all"
+]
+
+[tool.mypy]
+disable_error_code = "import-untyped"
 
 [tool.coverage.run]
 source_pkgs = ["bot_squared", "tests"]
@@ -128,6 +138,7 @@ ignore = [
   "PLC1901", # empty string comparisons
   "PLW2901", # `for` loop variable overwritten
   "SIM114", # Combine `if` branches using logical `or` operator
+  "S101", # Allow assert
 ]
 unfixable = [
   # Don't touch unused imports

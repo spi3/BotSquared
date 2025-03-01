@@ -3,15 +3,11 @@ import logging
 import discord
 import yaml
 
-from bot_squared.interfaces.chat_plugin import ChatPlugin
 
-
-class Discord(ChatPlugin):
-    def __init__(self, config: dict, loaded_plugins: dict):
-        super().__init__(
-            config=config if config is not None else {},
-            loaded_plugins=loaded_plugins if loaded_plugins is not None else {},
-            logger=logging.getLogger(__name__))
+class Discord:
+    def __init__(self, plugin_name: str, config: dict):
+        self.plugin_name = plugin_name
+        self.config = config
 
         self.logger = logging.getLogger(__name__)
 
@@ -29,8 +25,6 @@ class Discord(ChatPlugin):
         self.__load_config()
 
         self.__connect()
-
-
 
     def __connect(self):
         intents = discord.Intents.default()
