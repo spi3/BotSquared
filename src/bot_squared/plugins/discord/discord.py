@@ -3,9 +3,12 @@ import logging
 import discord
 import yaml
 
+from bot_squared.plugins.plugin_base import PluginBase
 
-class Discord:
+
+class Discord(PluginBase):
     def __init__(self, plugin_name: str, config: dict):
+        super().__init__()
         self.plugin_name = plugin_name
         self.config = config
 

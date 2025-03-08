@@ -28,7 +28,11 @@ dependencies = [
     "pyyaml",
     "ts3",
     "discord.py",
+    "python-a2s"
 ]
+
+[tool.hatch.envs.default.scripts]
+app = "python src/bot_squared/b2.py"
 
 [project.urls]
 Documentation = "https://github.com/spi3/bot-squared#readme"
@@ -36,7 +40,7 @@ Issues = "https://github.com/spi3/bot-squared/issues"
 Source = "https://github.com/spi3/bot-squared"
 
 [tool.hatch.version]
-source = "vcs"
+path = "src/bot_squared/__about__.py"
 
 [tool.hatch.build.hooks.vcs]
 version-file = "src/bot_squared/_version.py"
@@ -67,9 +71,9 @@ all = [
   "format",
 ]
 fix = [
-  "fix-sort",
   "fix-format",
-  "fix-all"
+  "fix-all",
+  "all"
 ]
 
 [tool.mypy]
@@ -139,6 +143,7 @@ ignore = [
   "PLW2901", # `for` loop variable overwritten
   "SIM114", # Combine `if` branches using logical `or` operator
   "S101", # Allow assert
+  "SIM401", # allow single line if
 ]
 unfixable = [
   # Don't touch unused imports

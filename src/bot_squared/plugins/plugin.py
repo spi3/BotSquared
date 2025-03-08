@@ -10,7 +10,7 @@ class Plugin:
         self.conf = plugin_conf
         self.logger = logging.getLogger(__name__)
         self.module = importlib.import_module(f'plugins.{plugin_type}')
-        self.instance = self.module.create_plugin(plugin_conf)
+        self.instance = self.module.create_plugin(plugin_name, plugin_conf)
 
         # Run the plugin in a thread
         self.logger.info(f'Starting: {plugin_name}:{plugin_type}')

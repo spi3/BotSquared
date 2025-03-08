@@ -1,19 +1,24 @@
 # from interfaces.chat_bot import ChatBot
 import logging
 import time
+from pathlib import Path
 
 import ts3
 import ts3.definitions
 import yaml
-from bot_squared.integrator import integrates
+
+# from bot_squared.integrator import integrates
+from bot_squared.plugins.plugin_base import PluginBase
 
 MAX_TIMEOUTS: int = 5
 
 
-class Teamspeak:
+class Teamspeak(PluginBase):
     """Teamspeak plugin"""
 
     def __init__(self, plugin_name: str, config: dict):
+        super().__init__()
+
         self.plugin_name = plugin_name
         self.config = config
 
@@ -27,7 +32,7 @@ class Teamspeak:
 
         self.load_config()
 
-    def __connect(self):
+    def _connect(self):
         # Connect to the server
         self.ts3conn = ts3.query.TS3Connection(self.ts3_server_ip)
 
@@ -39,39 +44,41 @@ class Teamspeak:
         # Join the server
         self.ts3conn.use(sid=1)
 
-        # get the channel list
-        channels = self.ts3conn.channellist()
-
-        # find the channel
-        channel = next(channel for channel in channels if channel['channel_name'] == self.chat_channel_name)
-        self.channel_id = channel['cid']
-
         # get my data
         # serverQueryName = self.ts3conn.whoami()[0]['client_nickname']
         server_query_id = self.ts3conn.whoami()[0]['client_id']
 
         # move the user to the channel
-        self.ts3conn.clientmove(cid=self.channel_id, clid=server_query_id)
+        self.ts3conn.clientmove(cid=self.bot_channel_id, clid=server_query_id)
 
-        self.logger.info(f'{self.name} - Connected to {self.chat_channel_name}@{self.ts3_server_ip}')
+        self.logger.info(f'{self.plugin_name} - Connected to {self.bot_channel_id}@{self.ts3_server_ip}')
 
     def send_message(self, message, to):
         pass
 
-    def get_messages(self):
+    def receive_message(self):
         pass
+
+    def set_channel_name(self, channel_id: int, name: str) -> None:
+        try:
+            self.ts3conn.channeledit(cid=channel_id, channel_name=name)
+            self.logger.info(f"Updated channel {channel_id} to '{name}'")
+        except ts3.query.TS3QueryError as e:
+            self.logger.error(f'Failed to update channel {channel_id}: {e}')
+        except KeyError as e:
+            self.logger.error(f'Invalid template variable in channel {channel_id}: {e}')
 
     def run(self):
         # Connect to the server
         try:
-            self.__connect()
+            self._connect()
         except Exception as e:
-            self.logger.error(f'{self.name} - Failed to connect to server: {e}')
+            self.logger.error(f'{self.plugin_name} - Failed to connect to server: {e}')
             return
 
         # Register for the event.
         self.ts3conn.servernotifyregister(event='server')
-        self.ts3conn.servernotifyregister(event='channel', id_=self.channel_id)
+        self.ts3conn.servernotifyregister(event='channel', id_=self.bot_channel_id)
 
         # If all events are registered at the same time the client
         # gets flagged for flooding, therefore sleep between calls
@@ -84,6 +91,8 @@ class Teamspeak:
         while True:
             self.ts3conn.send_keepalive()
 
+            self.handle_integration_function_queue()
+
             try:
                 # This method blocks, but we must sent the keepalive message at
                 # least once in 5 minutes to avoid the sever side idle client
@@ -92,7 +101,7 @@ class Teamspeak:
 
                 self.logger.debug(f'{events}')
                 for event in events:
-                    self.logger.debug(f'{self.name} - Event: {event}')
+                    self.logger.debug(f'{self.plugin_name} - Event: {event}')
                     self.process_event(event)
 
             except ts3.query.TS3TimeoutError:
@@ -157,7 +166,7 @@ class Teamspeak:
 
     def load_config(self):
         # Load the default config
-        with open('teamspeak_default_config.yaml') as default_config_file:
+        with open(Path(__file__).resolve().parent / 'teamspeak_default_config.yaml') as default_config_file:
             self.default_config = yaml.safe_load(default_config_file)
 
         if self.default_config is None:
@@ -189,15 +198,10 @@ class Teamspeak:
         else:
             self.ts3_server_id = self.default_config['ts3_server_id']
 
-        if 'chat_channel_name' in self.config:
-            self.chat_channel_name = self.config['chat_channel_name']
+        if 'bot_channel_id' in self.config:
+            self.bot_channel_id = self.config['bot_channel_id']
         else:
-            self.chat_channel_name = self.default_config['chat_channel_name']
-
-        if 'name' in self.config:
-            self.name = self.config['name']
-        else:
-            self.name = self.default_config['name']
+            self.bot_channel_id = self.default_config['bot_channel_id']
 
         if 'commands' in self.config:
             self.commands = self.config['commands']

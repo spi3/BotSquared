@@ -16,6 +16,13 @@ def add_integration(plugin_name: str, integration: dict):
         _integrations[plugin_name] = {}
 
     _integrations[plugin_name] = integration
+    _integrations_lock.release()
+
+
+def add_loaded_plugins(plugin_name: str, plugin: Plugin):
+    _integrations_lock.acquire()
+    _loaded_plugins[plugin_name] = plugin
+    _integrations_lock.release()
 
 
 def integrates(func):
@@ -42,31 +49,36 @@ def integrates(func):
             integration = integrations[func_name]
 
             # Run the integrations
-            for integration_plugin in integration:
-                integration_plugin_params = integration[integration_plugin]
+            for function_integration in integration:
+                integration_plugin = function_integration['plugin_name']
 
                 if integration_plugin not in _loaded_plugins:
                     _logger.error(f'Integration invalid - Plugin {integration_plugin} not loaded')
                     continue
 
-                if 'function' not in integration_plugin_params:
+                if 'function' not in function_integration:
                     _logger.error(f'Integration invalid - Plugin {integration_plugin} missing function')
                     continue
 
-                integration_plugin_function = integration_plugin_params['function']
+                integration_plugin_function = function_integration['function']
                 integration_plugin_function_args = {}
 
-                if 'args' in integration_plugin_params:
-                    for arg in integration_plugin_params['args']:
-                        integration_plugin_function_args[arg] = integration_plugin_params['args'][arg].format(
-                            **func_ret
-                        )
-
+                if 'args' in function_integration:
+                    for arg in function_integration['args']:
+                        if isinstance(function_integration['args'][arg], str):
+                            integration_plugin_function_args[arg] = function_integration['args'][arg].format(
+                                **func_ret if isinstance(func_ret, dict) else {'return_val': func_ret}
+                            )
+                        else:
+                            integration_plugin_function_args[arg] = function_integration['args'][arg]
                 try:
-                    integration_function = getattr(
-                        _loaded_plugins[integration_plugin].instance, integration_plugin_function
+                    # integration_function = getattr(
+                    #     _loaded_plugins[integration_plugin].instance, integration_plugin_function
+                    # )
+                    # threading.Thread(target=integration_function(integration_plugin_function_args)).start()
+                    _loaded_plugins[integration_plugin].instance.add_to_queue(
+                        integration_plugin_function, integration_plugin_function_args
                     )
-                    integration_function(integration_plugin_function_args)
                     _logger.debug(
                         f'Integration {integration_plugin} called - '
                         f'function: {integration_plugin_function} with args:'

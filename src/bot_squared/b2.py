@@ -2,10 +2,13 @@ import argparse
 import logging
 import sys
 import time
+from pathlib import Path
 from typing import Optional
 
 import yaml
 
+from bot_squared import integrator
+from bot_squared.config_validator import validate_config
 from bot_squared.plugins.plugin import Plugin
 
 
@@ -26,7 +29,7 @@ def main(args: Optional[argparse.Namespace] = None):
         config = yaml.safe_load(config_file)
 
     # Load the default config file
-    with open('default_config.yaml') as default_config_file:
+    with open(Path(__file__).resolve().parent / 'default_config.yaml') as default_config_file:
         default_config = yaml.safe_load(default_config_file)
 
     if config is None:
@@ -36,6 +39,8 @@ def main(args: Optional[argparse.Namespace] = None):
     if default_config is None:
         logger.error('No default config found')
         return
+
+    validate_config(config)
 
     log_level = config['log_level'] if 'log_level' in config else default_config['log_level']
     log_file = config['log_file'] if 'log_file' in config else default_config['log_file']
@@ -63,21 +68,25 @@ def main(args: Optional[argparse.Namespace] = None):
             logger.error(f'No plugin specified in configuration for: {plugin_name}')
 
         plugin_type = plugins[plugin_name]['plugin_type']
+        plugin_integrations = plugins[plugin_name]['integrations'] if 'integrations' in plugins[plugin_name] else {}
 
-        logger.info(f'Loading: {plugin_name}: {plugins[plugin_name][plugin_type]}')
+        logger.info(f'Loading: {plugin_name}: {plugin_type}')
+
+        integrator.add_integration(plugin_name, plugin_integrations)
 
         # Load the plugin
         loaded_plugins[plugin_name] = Plugin(
             plugin_name=plugin_name, plugin_type=plugin_type, plugin_conf=plugins[plugin_name]
         )
+        integrator.add_loaded_plugins(plugin_name, loaded_plugins[plugin_name])
 
     plugin_active = True
     while plugin_active:
         plugin_active = False
 
         # Check if the plugins are still running
-        for plugin in loaded_plugins.items():
-            if loaded_plugins[plugin].is_alive():
+        for _, plugin in loaded_plugins.items():
+            if plugin.is_alive():
                 plugin_active = True
                 break
 
@@ -119,7 +128,7 @@ def convert_log_level(level: str):
 if __name__ == '__main__':
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Bot Squared')
-    parser.add_argument('--config', type=str, default='config.yaml', help='Path to the config file')
+    parser.add_argument('--config', type=str, default='configa.yaml', help='Path to the config file')
     args = parser.parse_args()
 
     main(args)

@@ -1,4 +1,0 @@
-pyyaml
-ts3
-discord.py
-mypy
