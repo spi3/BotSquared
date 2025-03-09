@@ -20,7 +20,7 @@ class Discord(PluginBase):
         # Config fields
         self.iteration_rate_hz = None
 
-        self.logger.info('Discord initializing...')
+        self.logger.info("Discord initializing...")
 
         # Hack to ensure config is not None
         if self.config is None:
@@ -38,7 +38,7 @@ class Discord(PluginBase):
 
         @client.event
         async def on_ready():
-            self.logger.info(f'Logged in as {self.client.user}')
+            self.logger.info(f"Logged in as {self.client.user}")
             self.ready = True
 
         @client.event
@@ -55,24 +55,24 @@ class Discord(PluginBase):
             return False
 
     def __load_config(self):
-        with open('plugins/discord/default_config.yaml') as default_config_file:
+        with open("plugins/discord/default_config.yaml") as default_config_file:
             self.default_config = yaml.safe_load(default_config_file)
 
         if self.default_config is None:
-            self.logger.error('No default config found')
+            self.logger.error("No default config found")
             return
 
-        if 'iteration_rate_hz' in self.config:
-            self.iteration_rate_hz = self.config['iteration_rate_hz']
+        if "iteration_rate_hz" in self.config:
+            self.iteration_rate_hz = self.config["iteration_rate_hz"]
         else:
-            self.iteration_rate_hz = self.default_config['iteration_rate_hz']
+            self.iteration_rate_hz = self.default_config["iteration_rate_hz"]
 
-        if 'token' in self.config:
-            self.token = self.config['token']
+        if "token" in self.config:
+            self.token = self.config["token"]
         else:
-            self.token = self.default_config['token']
+            self.token = self.default_config["token"]
 
-        if 'channel_id' in self.config:
-            self.channel_id = self.config['channel_id']
+        if "channel_id" in self.config:
+            self.channel_id = self.config["channel_id"]
         else:
-            self.channel_id = self.default_config['channel_id']
+            self.channel_id = self.default_config["channel_id"]

@@ -144,6 +144,8 @@ ignore = [
   "SIM114", # Combine `if` branches using logical `or` operator
   "S101", # Allow assert
   "SIM401", # allow single line if
+  "Q000",
+  "Q003"
 ]
 unfixable = [
   # Don't touch unused imports

@@ -8,5 +8,5 @@ class TestTemplate(unittest.TestCase):
         self.assertIsInstance(Template(), Template)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

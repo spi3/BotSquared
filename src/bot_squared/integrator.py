@@ -42,35 +42,35 @@ def integrates(func):
         integrations = _integrations.get(self.plugin_name, None)
 
         if integrations is None:
-            _logger.debug(f'No integrations found for {self.plugin_name}')
+            _logger.debug(f"No integrations found for {self.plugin_name}")
         elif func_name not in integrations:
-            _logger.debug(f'No integrations found for {self.plugin_name} - {func_name}')
+            _logger.debug(f"No integrations found for {self.plugin_name} - {func_name}")
         else:
             integration = integrations[func_name]
 
             # Run the integrations
             for function_integration in integration:
-                integration_plugin = function_integration['plugin_name']
+                integration_plugin = function_integration["plugin_name"]
 
                 if integration_plugin not in _loaded_plugins:
-                    _logger.error(f'Integration invalid - Plugin {integration_plugin} not loaded')
+                    _logger.error(f"Integration invalid - Plugin {integration_plugin} not loaded")
                     continue
 
-                if 'function' not in function_integration:
-                    _logger.error(f'Integration invalid - Plugin {integration_plugin} missing function')
+                if "function" not in function_integration:
+                    _logger.error(f"Integration invalid - Plugin {integration_plugin} missing function")
                     continue
 
-                integration_plugin_function = function_integration['function']
+                integration_plugin_function = function_integration["function"]
                 integration_plugin_function_args = {}
 
-                if 'args' in function_integration:
-                    for arg in function_integration['args']:
-                        if isinstance(function_integration['args'][arg], str):
-                            integration_plugin_function_args[arg] = function_integration['args'][arg].format(
-                                **func_ret if isinstance(func_ret, dict) else {'return_val': func_ret}
+                if "args" in function_integration:
+                    for arg in function_integration["args"]:
+                        if isinstance(function_integration["args"][arg], str):
+                            integration_plugin_function_args[arg] = function_integration["args"][arg].format(
+                                **func_ret if isinstance(func_ret, dict) else {"return_val": func_ret}
                             )
                         else:
-                            integration_plugin_function_args[arg] = function_integration['args'][arg]
+                            integration_plugin_function_args[arg] = function_integration["args"][arg]
                 try:
                     # integration_function = getattr(
                     #     _loaded_plugins[integration_plugin].instance, integration_plugin_function
@@ -80,14 +80,14 @@ def integrates(func):
                         integration_plugin_function, integration_plugin_function_args
                     )
                     _logger.debug(
-                        f'Integration {integration_plugin} called - '
-                        f'function: {integration_plugin_function} with args:'
-                        f'{integration_plugin_function_args}'
+                        f"Integration {integration_plugin} called - "
+                        f"function: {integration_plugin_function} with args:"
+                        f"{integration_plugin_function_args}"
                     )
 
                 except Exception as e:
                     _logger.error(
-                        f'Error in integration {integration_plugin}calling function: {integration_plugin_function}- {e}'
+                        f"Error in integration {integration_plugin}calling function: {integration_plugin_function}- {e}"
                     )
 
         _integrations_lock.release()
