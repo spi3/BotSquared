@@ -10,4 +10,8 @@ services:
       - "30033:30033"
     environment:
       TS3SERVER_LICENSE: accept
+    volumes:
+      - teamspeak_test:/var/ts3server
 
+volumes:
+  teamspeak_test:
