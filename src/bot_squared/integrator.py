@@ -11,26 +11,20 @@ _logger = logging.getLogger(__name__)
 
 
 def add_integration(plugin_name: str, integration: dict):
-    _integrations_lock.acquire()
     if plugin_name not in _integrations:
         _integrations[plugin_name] = {}
 
     _integrations[plugin_name] = integration
-    _integrations_lock.release()
 
 
 def add_loaded_plugins(plugin_name: str, plugin: Plugin):
-    _integrations_lock.acquire()
     _loaded_plugins[plugin_name] = plugin
-    _integrations_lock.release()
 
 
 def integrates(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         # 'self' is the instance of the calling object
-
-        _integrations_lock.acquire()
 
         # Call the function
         func_ret = func(self, *args, **kwargs)
@@ -90,7 +84,6 @@ def integrates(func):
                         f"Error in integration {integration_plugin}calling function: {integration_plugin_function}- {e}"
                     )
 
-        _integrations_lock.release()
         return func_ret
 
     return wrapper
