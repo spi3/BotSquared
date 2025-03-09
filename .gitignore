@@ -174,3 +174,4 @@ cython_debug/
 .pypirc
 .vscode
 config.yaml
+src/bot_squared/_version.py
