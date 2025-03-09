@@ -29,7 +29,7 @@ def test_plugin_initialization(mock_import_module, plugin_args):
     plugin = Plugin(**plugin_args)
 
     mock_import_module.assert_called_once_with(f"plugins.{plugin_args['plugin_type']}")
-    mock_module.create_plugin.assert_called_once_with(plugin_args["plugin_conf"])
+    mock_module.create_plugin.assert_called_once_with(plugin_args['plugin_name'], plugin_args["plugin_conf"])
     assert plugin.name == plugin_args["plugin_name"]
     assert plugin.plugin_type == plugin_args["plugin_type"]
     assert plugin.conf == plugin_args["plugin_conf"]
