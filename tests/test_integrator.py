@@ -30,14 +30,14 @@ def integrations():
                 {
                     "plugin_name": "test_integration_plugin",
                     "function": "test_integration_plugin_function",
-                    "args": {"arg1": "{return_value1}", "arg2": "{return_value2}"}
+                    "args": {"arg1": "{return_value1}", "arg2": "{return_value2}"},
                 }
             ],
             "test_integration_function_dict_with_static_value": [
                 {
                     "plugin_name": "test_integration_plugin",
                     "function": "test_integration_plugin_function",
-                    "args": {"arg1": "{return_value1}", "arg2": "{return_value2}", "arg3": "some_static_value"}
+                    "args": {"arg1": "{return_value1}", "arg2": "{return_value2}", "arg3": "some_static_value"},
                 }
             ],
             "test_integration_function_value": [
@@ -46,7 +46,7 @@ def integrations():
                     "function": "test_integration_plugin_function",
                     "args": {"arg": "{return_val}"},
                 }
-            ]
+            ],
         }
     }
 
@@ -65,8 +65,7 @@ def test_integrable_dict_return(logger_mock, integrations):
         test_plugin.test_integration_function_dict()
         instance = mock_plugin.instance
         instance.add_to_queue.assert_called_once_with(
-            "test_integration_plugin_function",
-            {"arg1": "some_argument_1", "arg2": "some_argument_2"}
+            "test_integration_plugin_function", {"arg1": "some_argument_1", "arg2": "some_argument_2"}
         )
 
 
@@ -84,10 +83,7 @@ def test_integrable_value_return(logger_mock, integrations):
         test_plugin = TestPlugin("test_plugin")
         test_plugin.test_integration_function_value()
         instance = mock_plugin.instance
-        instance.add_to_queue.assert_called_once_with(
-            "test_integration_plugin_function",
-            {"arg": "some_value"}
-        )
+        instance.add_to_queue.assert_called_once_with("test_integration_plugin_function", {"arg": "some_value"})
 
 
 @patch("bot_squared.integrator._logger")
@@ -105,5 +101,5 @@ def test_integrable_dict_return_static_value(logger_mock, integrations):
         instance = mock_plugin.instance
         instance.add_to_queue.assert_called_once_with(
             "test_integration_plugin_function",
-            {"arg1": "some_argument_1", "arg2": "some_argument_2", "arg3": "some_static_value"}
+            {"arg1": "some_argument_1", "arg2": "some_argument_2", "arg3": "some_static_value"},
         )
