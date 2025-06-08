@@ -1,0 +1,37 @@
+{% extends "base.html.j2" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1>Bot Squared Plugin Documentation</h1>
+
+<div class="search-container">
+    <input type="text" id="search" placeholder="Search plugins...">
+</div>
+
+{% for category, category_plugins in categories.items() %}
+<section>
+    <h2>{{ category }}</h2>
+    <div class="plugin-grid">
+        {% for plugin in category_plugins %}
+        <a href="plugins/{{ plugin.name }}.html" class="plugin-card" style="text-decoration: none; color: inherit;">
+            <h3>{{ plugin.name }}</h3>
+            <p>{{ plugin.description | truncate(150) if plugin.description else 'No description available.' }}</p>
+            <div style="margin-top: 1rem;">
+                {% if plugin.integration_methods %}
+                <span class="badge" style="background-color: var(--primary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em; margin-right: 0.5rem;">
+                    {{ plugin.integration_methods | length }} Method{{ 's' if plugin.integration_methods | length != 1 }}
+                </span>
+                {% endif %}
+                {% if plugin.configuration %}
+                <span class="badge" style="background-color: var(--secondary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em;">
+                    {{ plugin.configuration | length }} Config Option{{ 's' if plugin.configuration | length != 1 }}
+                </span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endfor %}
+{% endblock %} 
