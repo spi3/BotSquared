@@ -71,6 +71,7 @@ test-cov = "pytest --cov=bot_squared --cov-report=term-missing"
 all = [
   "types",
   "format",
+  "test"
 ]
 fix = [
   "fix-format",
