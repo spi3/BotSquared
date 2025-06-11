@@ -1,3 +1,4 @@
+import logging
 import threading
 from queue import Queue
 from typing import Dict, NamedTuple
@@ -5,6 +6,7 @@ from typing import Dict, NamedTuple
 
 class FunctionCall(NamedTuple):
     """Immutable function call data structure"""
+
     function_name: str
     args: Dict
 
@@ -15,6 +17,8 @@ class PluginBase:
         # Use Event for thread-safe state management
         self._running = threading.Event()
         self._running.set()
+        # Initialize logger
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def add_to_queue(self, function_name: str, args: dict) -> None:
         """Add a function call to the queue using immutable message."""
@@ -25,7 +29,7 @@ class PluginBase:
         while not self.function_queue.empty():
             try:
                 call = self.function_queue.get_nowait()
-                
+
                 if not hasattr(self, call.function_name):
                     self.logger.error(f"Error: {call.function_name} not found")
                     continue
@@ -33,7 +37,7 @@ class PluginBase:
                 # Get and execute the requested function
                 requested_function = getattr(self, call.function_name)
                 requested_function(**call.args)
-                
+
             except Exception as e:
                 self.logger.error(f"Error processing function call: {e}")
 

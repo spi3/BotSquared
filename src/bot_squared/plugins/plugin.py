@@ -1,7 +1,6 @@
 import importlib
 import logging
 import threading
-from typing import Dict, Optional
 
 from bot_squared import integrator
 
@@ -18,8 +17,8 @@ class Plugin:
         self.instance = self.module.create_plugin(plugin_name, plugin_conf)
 
         # Register integrations if any
-        if 'integrations' in plugin_conf:
-            integrator.register_integrations(plugin_name, plugin_conf['integrations'])
+        if "integrations" in plugin_conf:
+            integrator.register_integrations(plugin_name, plugin_conf["integrations"])
 
         # Use Event for thread-safe state management
         self._running = threading.Event()

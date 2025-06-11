@@ -1,14 +1,14 @@
-from dataclasses import dataclass
-from queue import Queue, Empty
 import logging
 import threading
-import time
-from typing import Any, Dict, Optional
+from dataclasses import dataclass
+from queue import Empty, Queue
+from typing import Any, Dict
 
 
 @dataclass(frozen=True)
 class PluginEvent:
     """Immutable event data structure for plugin events."""
+
     plugin_name: str
     function_name: str
     return_value: Any
@@ -16,20 +16,21 @@ class PluginEvent:
 
 class EventHandler:
     """Event handler that processes plugin events and manages integrations."""
+
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self._integrations: Dict[str, Dict[str, list]] = {}
         self._running = threading.Event()
         self._running.set()
         self._event_queue: Queue[PluginEvent] = Queue()
-        
+
         # Start event processing thread
         self._event_thread = threading.Thread(target=self._process_events, daemon=True)
         self._event_thread.start()
 
     def register_integration(self, plugin_name: str, integration: dict) -> None:
         """Register integrations for a plugin.
-        
+
         Args:
             plugin_name: Name of the plugin
             integration: Integration configuration from the plugin's config
@@ -45,7 +46,7 @@ class EventHandler:
 
     def publish_event(self, event: PluginEvent) -> None:
         """Publish an event to the event queue.
-        
+
         Args:
             event: The PluginEvent to publish
         """
@@ -77,10 +78,11 @@ class EventHandler:
                         try:
                             # Get the target plugin
                             from bot_squared.integrator import get_plugin
+
                             target_plugin = integration.get("plugin_name")
                             if not target_plugin:
                                 continue
-                                
+
                             plugin = get_plugin(target_plugin)
                             if not plugin:
                                 self.logger.error(f"Target plugin not found: {target_plugin}")
@@ -98,7 +100,8 @@ class EventHandler:
                                     if isinstance(arg_template, str):
                                         # Format the argument using the event's return value
                                         args[arg_name] = arg_template.format(
-                                            **event.return_value if isinstance(event.return_value, dict)
+                                            **event.return_value
+                                            if isinstance(event.return_value, dict)
                                             else {"return_val": event.return_value}
                                         )
                                     else:
@@ -137,4 +140,4 @@ class EventHandler:
         self._integrations = {}
         self._running.set()
         self._event_thread = threading.Thread(target=self._process_events, daemon=True)
-        self._event_thread.start() 
+        self._event_thread.start()

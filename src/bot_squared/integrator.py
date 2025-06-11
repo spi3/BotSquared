@@ -27,21 +27,21 @@ def register_integrations(plugin_name: str, integrations: dict) -> None:
 
 def plugin_event(func):
     """Decorator that makes a plugin method publish events.
-    
-    This decorator enables event-driven integration between plugins. When a decorated 
+
+    This decorator enables event-driven integration between plugins. When a decorated
     method is called, it will:
     1. Execute the original method
     2. Create a PluginEvent with the result
     3. Publish the event to the event handler
-    
-    The integration configuration should be defined in the plugin's config under the 
+
+    The integration configuration should be defined in the plugin's config under the
     'integrations' key. Each integration should specify:
     - plugin_name: The target plugin to integrate with
     - function: The function to call in the target plugin
     - args: Arguments to pass to the target function
         - Use {return_val} to reference a simple return value
         - Use {key_name} to reference keys from a dictionary return value
-    
+
     Example config:
         integrations:
             send_message: [
@@ -55,20 +55,18 @@ def plugin_event(func):
                 }
             ]
     """
+
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         # Call the original function
         result = func(self, *args, **kwargs)
-        
+
         # Create and publish the event
-        event = PluginEvent(
-            plugin_name=self.plugin_name,
-            function_name=func.__name__,
-            return_value=result
-        )
+        event = PluginEvent(plugin_name=self.plugin_name, function_name=func.__name__, return_value=result)
         _event_handler.publish_event(event)
-        
+
         return result
+
     return wrapper
 
 

@@ -1,10 +1,10 @@
 import threading
 import time
 from unittest.mock import MagicMock, patch
+
 import pytest
-from queue import Empty
+
 from bot_squared.events import EventHandler, PluginEvent
-from bot_squared.integrator import get_event_handler
 
 
 @pytest.fixture
@@ -33,13 +33,7 @@ def test_register_integration(event_handler):
 
     # Test with valid integration
     test_integration = {
-        "test_function": [
-            {
-                "plugin_name": "target_plugin",
-                "function": "target_function",
-                "args": {"arg1": "value1"}
-            }
-        ]
+        "test_function": [{"plugin_name": "target_plugin", "function": "target_function", "args": {"arg1": "value1"}}]
     }
     event_handler.register_integration("test_plugin", test_integration)
     assert event_handler._integrations["test_plugin"] == test_integration
@@ -47,12 +41,8 @@ def test_register_integration(event_handler):
 
 def test_publish_event(event_handler):
     """Test publishing events to the queue."""
-    event = PluginEvent(
-        plugin_name="test_plugin",
-        function_name="test_function",
-        return_value="test_value"
-    )
-    
+    event = PluginEvent(plugin_name="test_plugin", function_name="test_function", return_value="test_value")
+
     event_handler.publish_event(event)
     assert event_handler._event_queue.qsize() == 1
     queued_event = event_handler._event_queue.get()
@@ -74,10 +64,7 @@ def test_process_events_with_dict_return(mock_get_plugin, event_handler):
             {
                 "plugin_name": "target_plugin",
                 "function": "target_function",
-                "args": {
-                    "arg1": "{value1}",
-                    "arg2": "{value2}"
-                }
+                "args": {"arg1": "{value1}", "arg2": "{value2}"},
             }
         ]
     }
@@ -85,9 +72,7 @@ def test_process_events_with_dict_return(mock_get_plugin, event_handler):
 
     # Create and publish test event
     event = PluginEvent(
-        plugin_name="test_plugin",
-        function_name="test_function",
-        return_value={"value1": "test1", "value2": "test2"}
+        plugin_name="test_plugin", function_name="test_function", return_value={"value1": "test1", "value2": "test2"}
     )
     event_handler.publish_event(event)
 
@@ -96,10 +81,7 @@ def test_process_events_with_dict_return(mock_get_plugin, event_handler):
     time.sleep(0.1)  # Give time for the processing to complete
 
     # Verify the plugin was called with formatted arguments
-    mock_plugin.instance.add_to_queue.assert_called_once_with(
-        "target_function",
-        {"arg1": "test1", "arg2": "test2"}
-    )
+    mock_plugin.instance.add_to_queue.assert_called_once_with("target_function", {"arg1": "test1", "arg2": "test2"})
 
 
 @patch("bot_squared.integrator.get_plugin")
@@ -111,21 +93,13 @@ def test_process_events_with_scalar_return(mock_get_plugin, event_handler):
     # Set up test integration
     test_integration = {
         "test_function": [
-            {
-                "plugin_name": "target_plugin",
-                "function": "target_function",
-                "args": {"arg": "{return_val}"}
-            }
+            {"plugin_name": "target_plugin", "function": "target_function", "args": {"arg": "{return_val}"}}
         ]
     }
     event_handler.register_integration("test_plugin", test_integration)
 
     # Create and publish test event
-    event = PluginEvent(
-        plugin_name="test_plugin",
-        function_name="test_function",
-        return_value="test_value"
-    )
+    event = PluginEvent(plugin_name="test_plugin", function_name="test_function", return_value="test_value")
     event_handler.publish_event(event)
 
     # Wait for event processing with timeout
@@ -133,10 +107,7 @@ def test_process_events_with_scalar_return(mock_get_plugin, event_handler):
     time.sleep(0.1)  # Give time for the processing to complete
 
     # Verify the plugin was called with formatted arguments
-    mock_plugin.instance.add_to_queue.assert_called_once_with(
-        "target_function",
-        {"arg": "test_value"}
-    )
+    mock_plugin.instance.add_to_queue.assert_called_once_with("target_function", {"arg": "test_value"})
 
 
 @patch("bot_squared.integrator.get_plugin")
@@ -148,11 +119,7 @@ def test_process_events_with_static_value(mock_get_plugin, event_handler):
     # Set up test integration with static value
     test_integration = {
         "test_function": [
-            {
-                "plugin_name": "target_plugin",
-                "function": "target_function",
-                "args": {"arg": "static_value"}
-            }
+            {"plugin_name": "target_plugin", "function": "target_function", "args": {"arg": "static_value"}}
         ]
     }
     event_handler.register_integration("test_plugin", test_integration)
@@ -161,7 +128,7 @@ def test_process_events_with_static_value(mock_get_plugin, event_handler):
     event = PluginEvent(
         plugin_name="test_plugin",
         function_name="test_function",
-        return_value="test_value"  # This should not affect the static arg
+        return_value="test_value",  # This should not affect the static arg
     )
     event_handler.publish_event(event)
 
@@ -170,10 +137,7 @@ def test_process_events_with_static_value(mock_get_plugin, event_handler):
     time.sleep(0.1)  # Give time for the processing to complete
 
     # Verify the plugin was called with static argument
-    mock_plugin.instance.add_to_queue.assert_called_once_with(
-        "target_function",
-        {"arg": "static_value"}
-    )
+    mock_plugin.instance.add_to_queue.assert_called_once_with("target_function", {"arg": "static_value"})
 
 
 @patch("bot_squared.integrator.get_plugin")
@@ -186,26 +150,14 @@ def test_process_events_with_multiple_integrations(mock_get_plugin, event_handle
     # Set up test integration with multiple targets
     test_integration = {
         "test_function": [
-            {
-                "plugin_name": "target_plugin1",
-                "function": "target_function1",
-                "args": {"arg1": "{return_val}"}
-            },
-            {
-                "plugin_name": "target_plugin2",
-                "function": "target_function2",
-                "args": {"arg2": "{return_val}"}
-            }
+            {"plugin_name": "target_plugin1", "function": "target_function1", "args": {"arg1": "{return_val}"}},
+            {"plugin_name": "target_plugin2", "function": "target_function2", "args": {"arg2": "{return_val}"}},
         ]
     }
     event_handler.register_integration("test_plugin", test_integration)
 
     # Create and publish test event
-    event = PluginEvent(
-        plugin_name="test_plugin",
-        function_name="test_function",
-        return_value="test_value"
-    )
+    event = PluginEvent(plugin_name="test_plugin", function_name="test_function", return_value="test_value")
     event_handler.publish_event(event)
 
     # Wait for event processing with timeout
@@ -213,14 +165,8 @@ def test_process_events_with_multiple_integrations(mock_get_plugin, event_handle
     time.sleep(0.1)  # Give time for the processing to complete
 
     # Verify both plugins were called with correct arguments
-    mock_plugin1.instance.add_to_queue.assert_called_once_with(
-        "target_function1",
-        {"arg1": "test_value"}
-    )
-    mock_plugin2.instance.add_to_queue.assert_called_once_with(
-        "target_function2",
-        {"arg2": "test_value"}
-    )
+    mock_plugin1.instance.add_to_queue.assert_called_once_with("target_function1", {"arg1": "test_value"})
+    mock_plugin2.instance.add_to_queue.assert_called_once_with("target_function2", {"arg2": "test_value"})
 
 
 def test_error_handling(event_handler):
@@ -228,21 +174,13 @@ def test_error_handling(event_handler):
     # Test with non-existent plugin
     test_integration = {
         "test_function": [
-            {
-                "plugin_name": "non_existent_plugin",
-                "function": "target_function",
-                "args": {"arg": "value"}
-            }
+            {"plugin_name": "non_existent_plugin", "function": "target_function", "args": {"arg": "value"}}
         ]
     }
     event_handler.register_integration("test_plugin", test_integration)
 
     # Create and publish test event
-    event = PluginEvent(
-        plugin_name="test_plugin",
-        function_name="test_function",
-        return_value="test_value"
-    )
+    event = PluginEvent(plugin_name="test_plugin", function_name="test_function", return_value="test_value")
     event_handler.publish_event(event)
 
     # Wait for event processing with timeout
@@ -265,20 +203,10 @@ def test_reset(event_handler):
     """Test resetting the event handler."""
     # Add some test data
     test_integration = {
-        "test_function": [
-            {
-                "plugin_name": "target_plugin",
-                "function": "target_function",
-                "args": {"arg": "value"}
-            }
-        ]
+        "test_function": [{"plugin_name": "target_plugin", "function": "target_function", "args": {"arg": "value"}}]
     }
     event_handler.register_integration("test_plugin", test_integration)
-    event = PluginEvent(
-        plugin_name="test_plugin",
-        function_name="test_function",
-        return_value="test_value"
-    )
+    event = PluginEvent(plugin_name="test_plugin", function_name="test_function", return_value="test_value")
     event_handler.publish_event(event)
 
     # Reset the handler
@@ -288,4 +216,4 @@ def test_reset(event_handler):
     assert event_handler._event_queue.empty()
     assert not event_handler._integrations
     assert event_handler._running.is_set()
-    assert event_handler._event_thread.is_alive() 
+    assert event_handler._event_thread.is_alive()

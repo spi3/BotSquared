@@ -72,7 +72,7 @@ def main(args: Optional[argparse.Namespace] = None):
 
         logger.info(f"Loading: {plugin_name}: {plugin_type}")
 
-        integrator.add_integration(plugin_name, plugin_integrations)
+        integrator.register_integrations(plugin_name, plugin_integrations)
 
         # Load the plugin
         loaded_plugins[plugin_name] = Plugin(
