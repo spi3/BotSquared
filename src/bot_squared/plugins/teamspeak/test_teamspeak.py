@@ -34,13 +34,14 @@ def test_teamspeak(mock_load_config):
         "command_prefix": "!",
         "commands": {},
         "new_user_message": "Welcome to the server!",
-        "new_user_inform_group": "Server Admin"
+        "new_user_inform_group": "Server Admin",
     }
 
     # Configure the mock to set up the attributes
     def mock_load_config_impl(instance):
         for key, value in test_config.items():
             setattr(instance, key, value)
+
     mock_load_config.side_effect = mock_load_config_impl
 
     ts = Teamspeak(plugin_name="Test_Teamspeak", config=test_config)
