@@ -26,6 +26,7 @@ class Teamspeak(PluginBase):
         self.config = config
 
         self.logger = logging.getLogger(__name__)
+        self.logger.debug(f"Initializing TeamSpeak plugin with config: {config}")
         self.default_config = None
 
         # Config fields
@@ -40,24 +41,35 @@ class Teamspeak(PluginBase):
         self.logger.info("Teamspeak initializing...")
 
         self.load_config()
+        self.logger.debug(
+            f"TeamSpeak plugin initialized with: iteration_rate={self.iteration_rate_hz}, "
+            f"server={self.ts3_server_ip}, username={self.ts3_server_query_username}, "
+            f"server_id={self.ts3_server_id}, bot_channel={self.bot_channel_id}, "
+            f"inactivity_timeout={self.inactivity_timeout_minutes}, afk_channel={self.afk_channel_id}"
+        )
 
     def _connect(self):
+        self.logger.debug(f"Attempting to connect to TeamSpeak server at {self.ts3_server_ip}")
         # Connect to the server
         self.ts3conn = ts3.query.TS3Connection(self.ts3_server_ip)
 
         # Authenticate with the server
+        self.logger.debug(f"Authenticating with username: {self.ts3_server_query_username}")
         self.ts3conn.login(
             client_login_name=self.ts3_server_query_username, client_login_password=self.ts3_server_query_passwd
         )
 
         # Join the server
+        self.logger.debug("Selecting server with SID: 1")
         self.ts3conn.use(sid=1)
 
         # get my data
-        # serverQueryName = self.ts3conn.whoami()[0]['client_nickname']
-        server_query_id = self.ts3conn.whoami()[0]["client_id"]
+        whoami_data = self.ts3conn.whoami()[0]
+        self.logger.debug(f"Bot identity data: {whoami_data}")
+        server_query_id = whoami_data["client_id"]
 
         # move the user to the channel
+        self.logger.debug(f"Moving bot (ID: {server_query_id}) to channel: {self.bot_channel_id}")
         self.ts3conn.clientmove(cid=self.bot_channel_id, clid=server_query_id)
 
         self.logger.info(f"{self.plugin_name} - Connected to {self.bot_channel_id}@{self.ts3_server_ip}")
@@ -70,6 +82,7 @@ class Teamspeak(PluginBase):
             message (str): The message to send
             to (int): The target ID to send the message to
         """
+        self.logger.debug(f"Attempting to send message to client {to}: {message}")
         try:
             self.ts3conn.sendtextmessage(
                 targetmode=ts3.definitions.TextMessageTargetMode.CLIENT, target=to, msg=message
@@ -77,18 +90,22 @@ class Teamspeak(PluginBase):
             self.logger.info(f"Sent message to {to}: {message}")
         except ts3.query.TS3QueryError as e:
             self.logger.error(f"Failed to send message to {to}: {e}")
+            self.logger.debug(f"Full error details for failed message: {e!s}")
 
     def receive_message(self):
         pass
 
     def set_channel_name(self, channel_id: int, name: str) -> None:
+        self.logger.debug(f"Attempting to update channel {channel_id} name to: {name}")
         try:
             self.ts3conn.channeledit(cid=channel_id, channel_name=name)
             self.logger.info(f"Updated channel {channel_id} to '{name}'")
         except ts3.query.TS3QueryError as e:
             self.logger.error(f"Failed to update channel {channel_id}: {e}")
+            self.logger.debug(f"Full error details for channel update: {e!s}")
         except KeyError as e:
             self.logger.error(f"Invalid template variable in channel {channel_id}: {e}")
+            self.logger.debug(f"Template error details: {e!s}")
 
     def update_user_activity(self, client_id: str):
         """Update the last activity timestamp for a user.
@@ -96,56 +113,78 @@ class Teamspeak(PluginBase):
         Args:
             client_id (str): The client ID of the user
         """
-        self.user_activity_timestamps[client_id] = time.time()
+        current_time = time.time()
+        previous_time = self.user_activity_timestamps.get(client_id)
+        self.user_activity_timestamps[client_id] = current_time
+        self.logger.debug(f"Updated activity for client {client_id}: previous={previous_time}, new={current_time}")
 
     def check_inactive_users(self):
         """Check for inactive users and move them to the AFK channel if needed."""
         if not self.enable_inactivity_monitoring:
+            self.logger.debug("Inactivity monitoring is disabled, skipping check")
             return
 
         try:
-            # Get current time
             current_time = time.time()
+            self.logger.debug("Starting inactive user check")
 
             # Get list of all clients
             clients = self.ts3conn.clientlist()
+            self.logger.debug(f"Retrieved {len(clients)} clients from server: {clients}")
 
             for client in clients:
                 client_id = client["clid"]
+                client_type = client.get("client_type")
+                client_cid = client.get("cid", -1)
+                client_name = client.get("client_nickname", "Unknown")
+
+                self.logger.debug(
+                    f"Checking client: ID={client_id}, type={client_type}, channel={client_cid}, name={client_name}"
+                )
 
                 # Skip server query clients and users already in AFK channel
-                if (
-                    client.get("client_type") == "1"  # Server query client
-                    or int(client.get("cid", -1)) == self.afk_channel_id
-                ):  # Already in AFK channel
+                if client_type == "1" or int(client_cid) == self.afk_channel_id:
+                    self.logger.debug(
+                        f"Skipping client {client_id}: "
+                        f"{'Server query client' if client_type == '1' else 'Already in AFK channel'}"
+                    )
                     continue
 
                 # If user not in activity tracking, add them with current time
                 if client_id not in self.user_activity_timestamps:
+                    self.logger.debug(f"New client {client_id} detected, initializing activity timestamp")
                     self.update_user_activity(client_id)
                     continue
 
                 # Check if user has been inactive
-                inactive_time = (current_time - self.user_activity_timestamps[client_id]) / 60  # Convert to minutes
+                last_activity = self.user_activity_timestamps[client_id]
+                inactive_time = (current_time - last_activity) / 60  # Convert to minutes
+                self.logger.debug(
+                    f"Client {client_id} inactive time: {inactive_time:.2f} minutes "
+                    f"(last active: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_activity))})"
+                )
+
                 if inactive_time >= self.inactivity_timeout_minutes:
                     try:
+                        self.logger.debug(f"Moving inactive client {client_id} to AFK channel {self.afk_channel_id}")
                         # Move user to AFK channel
                         self.ts3conn.clientmove(cid=self.afk_channel_id, clid=client_id)
-                        self.logger.info(
-                            f"Moved inactive user {client.get('client_nickname', 'Unknown')} to AFK channel"
-                        )
+                        self.logger.info(f"Moved inactive user {client_name} to AFK channel")
 
                         # Notify the user
-                        self.send_message(
-                            "You have been moved to the AFK channel due to "
-                            f"{self.inactivity_timeout_minutes} minutes of inactivity.",
-                            client_id,
+                        notification = (
+                            f"You have been moved to the AFK channel due to "
+                            f"{self.inactivity_timeout_minutes} minutes of inactivity."
                         )
+                        self.logger.debug(f"Sending inactivity notification to client {client_id}: {notification}")
+                        self.send_message(notification, client_id)
                     except ts3.query.TS3QueryError as e:
                         self.logger.error(f"Failed to move inactive user {client_id}: {e}")
+                        self.logger.debug(f"Full error details for move operation: {e!s}")
 
         except ts3.query.TS3QueryError as e:
             self.logger.error(f"Error checking for inactive users: {e}")
+            self.logger.debug(f"Full error details for inactive user check: {e!s}")
 
     def run(self):
         # Connect to the server
@@ -197,24 +236,34 @@ class Teamspeak(PluginBase):
                     pass
 
     def process_event(self, event):
+        self.logger.debug(f"Processing event: {event}")
+
         # Update user activity on any event that indicates user interaction
         if "invokerid" in event:
+            self.logger.debug(f"Updating activity for invoker {event['invokerid']}")
             self.update_user_activity(event["invokerid"])
 
         # Handle channel change events to update activity
         if "cfid" in event and "clid" in event:
+            self.logger.debug(
+                f"Channel change event detected for client {event['clid']}: "
+                f"from={event['cfid']}, to={event.get('ctid', 'unknown')}"
+            )
             self.update_user_activity(event["clid"])
 
         # Ignore events from the plugin
         if "invokername" in event and event["invokername"] == self.ts3_server_query_username:
+            self.logger.debug("Ignoring self-generated event")
             return
 
         if "msg" in event:
+            self.logger.debug(f"Processing message event: {event['msg']}")
             self.process_msg_event(event)
         elif "cfid" in event:
+            self.logger.debug("Processing join event")
             self.process_join_event(event)
         else:
-            pass
+            self.logger.debug(f"Unhandled event type: {event}")
 
     def process_join_event(self, event):
         """Process a user join event.
@@ -226,20 +275,28 @@ class Teamspeak(PluginBase):
         Args:
             event (dict): The join event containing user information
         """
+        self.logger.debug(f"Processing join event: {event}")
+
         joining_user_groups = None
         if "client_servergroups" in event:
-            joining_user_groups = event["client_servergroups"]
-            joining_user_groups = joining_user_groups.split(",")
+            joining_user_groups = event["client_servergroups"].split(",")
+            self.logger.debug(f"User groups for joining client: {joining_user_groups}")
 
         if joining_user_groups is not None and len(joining_user_groups) == 1:
-            # Get the user's nickname
             user_nickname = event.get("client_nickname", "Unknown User")
+            self.logger.debug(f"Processing single-group user join: {user_nickname}")
 
             # If user only has one group upon joining, check if it's the guest group
-            for group in self.ts3conn.servergrouplist():
+            server_groups = self.ts3conn.servergrouplist()
+            self.logger.debug(f"Server groups: {server_groups}")
+
+            for group in server_groups:
                 if group["sgid"] == joining_user_groups[0] and group["name"] == "Guest":
+                    self.logger.debug(f"New guest user detected: {user_nickname}")
+
                     # Send welcome message to the new user
                     try:
+                        self.logger.debug(f"Sending welcome message to {user_nickname}: {self.new_user_message}")
                         self.ts3conn.sendtextmessage(
                             targetmode=ts3.definitions.TextMessageTargetMode.CLIENT,
                             target=event["clid"],
@@ -248,58 +305,70 @@ class Teamspeak(PluginBase):
                         self.logger.info(f"Sent welcome message to new user: {user_nickname}")
                     except ts3.query.TS3QueryError as e:
                         self.logger.error(f"Failed to send welcome message to {user_nickname}: {e}")
+                        self.logger.debug(f"Full error details for welcome message: {e!s}")
 
                     # Find admin group and notify them about the new user
                     try:
-                        for admin_group in self.ts3conn.servergrouplist():
+                        for admin_group in server_groups:
                             if admin_group["name"] == self.new_user_inform_group:
+                                self.logger.debug(f"Found admin group: {admin_group}")
+
                                 # Get all clients in the admin group
                                 admin_clients = self.ts3conn.servergroupclientlist(sgid=admin_group["sgid"])
+                                self.logger.debug(f"Admin clients to notify: {admin_clients}")
 
                                 # Send notification to each admin
                                 for admin in admin_clients:
                                     try:
+                                        admin_msg = f"New user joined: {user_nickname}"
+                                        self.logger.debug(
+                                            f"Sending admin notification to {admin['cldbid']}: {admin_msg}"
+                                        )
                                         self.ts3conn.sendtextmessage(
                                             targetmode=ts3.definitions.TextMessageTargetMode.CLIENT,
-                                            target=admin["cldbid"],  # Use database ID for the admin
-                                            msg=f"New user joined: {user_nickname}",
+                                            target=admin["cldbid"],
+                                            msg=admin_msg,
                                         )
                                     except ts3.query.TS3QueryError as e:
                                         self.logger.error(
                                             f"Failed to notify admin {admin['cldbid']} about new user: {e}"
                                         )
+                                        self.logger.debug(f"Full error details for admin notification: {e!s}")
 
                                 self.logger.info(f"Notified admins about new user: {user_nickname}")
                                 break
                     except ts3.query.TS3QueryError as e:
                         self.logger.error(f"Failed to notify admins about new user {user_nickname}: {e}")
-
+                        self.logger.debug(f"Full error details for admin group notification: {e!s}")
                     return
 
     def process_msg_event(self, event):
         msg = event["msg"]
+        self.logger.debug(f"Processing message event: {msg}")
 
         envoked_command = None
         for command in self.commands:
             if msg.startswith(self.command_prefix + command):
                 envoked_command = self.commands[command]
+                self.logger.debug(f"Command matched: {command} -> {envoked_command}")
                 break
+
         if envoked_command is None:
-            return  # No command envoked, nothing to do
+            self.logger.debug("No command matched in message")
+            return
 
         self.logger.info(f"Command envoked: {envoked_command}")
 
         if "targetmode" not in event:
+            self.logger.debug("No targetmode in event, skipping response")
             return
 
         if "response" in self.commands[command]:
-            self.ts3conn.sendtextmessage(
-                targetmode=event["targetmode"], target=self.channel_id, msg=self.commands[command]["response"]
-            )
+            response = self.commands[command]["response"]
+            self.logger.debug(f"Sending command response to channel {self.channel_id}: {response}")
+            self.ts3conn.sendtextmessage(targetmode=event["targetmode"], target=self.channel_id, msg=response)
         else:
-            # Command has no response
-            # Do w/e else needs to be done
-            pass
+            self.logger.debug("Command has no response configured")
 
     def load_config(self):
         # Load the default config
