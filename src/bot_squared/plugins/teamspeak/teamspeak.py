@@ -7,7 +7,8 @@ import ts3
 import ts3.definitions
 import yaml
 
-# from bot_squared.integrator import integrates
+# from bot_squared.integrator import plugin_event
+from bot_squared.integrator import plugin_event
 from bot_squared.plugins.plugin_base import PluginBase
 
 MAX_TIMEOUTS: int = 5
@@ -53,8 +54,23 @@ class Teamspeak(PluginBase):
 
         self.logger.info(f"{self.plugin_name} - Connected to {self.bot_channel_id}@{self.ts3_server_ip}")
 
-    def send_message(self, message, to):
-        pass
+    @plugin_event
+    def send_message(self, message: str, to: int) -> None:
+        """Send a message to a target on TeamSpeak.
+
+        Args:
+            message (str): The message to send
+            to (int): The target ID to send the message to
+        """
+        try:
+            self.ts3conn.sendtextmessage(
+                targetmode=ts3.definitions.TextMessageTargetMode.CLIENT,
+                target=to,
+                msg=message
+            )
+            self.logger.info(f"Sent message to {to}: {message}")
+        except ts3.query.TS3QueryError as e:
+            self.logger.error(f"Failed to send message to {to}: {e}")
 
     def receive_message(self):
         pass

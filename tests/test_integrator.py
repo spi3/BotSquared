@@ -2,22 +2,22 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from bot_squared.integrator import integrates
+from bot_squared.integrator import plugin_event
 
 
 class TestPlugin:
     def __init__(self, plugin_name):
         self.plugin_name = plugin_name
 
-    @integrates
+    @plugin_event
     def test_integration_function_dict(self, *args, **kwargs):
         return {"return_value1": "some_argument_1", "return_value2": "some_argument_2"}
 
-    @integrates
+    @plugin_event
     def test_integration_function_dict_with_static_value(self, *args, **kwargs):
         return {"return_value1": "some_argument_1", "return_value2": "some_argument_2"}
 
-    @integrates
+    @plugin_event
     def test_integration_function_value(self, *args, **kwargs):
         return "some_value"
 

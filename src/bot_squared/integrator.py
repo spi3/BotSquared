@@ -6,7 +6,6 @@ from bot_squared.plugins.plugin import Plugin
 
 _loaded_plugins: dict[str, Plugin] = {}
 _integrations: dict = {}
-_integrations_lock = threading.Lock()
 _logger = logging.getLogger(__name__)
 
 
@@ -17,11 +16,58 @@ def add_integration(plugin_name: str, integration: dict):
     _integrations[plugin_name] = integration
 
 
+def get_integrations(plugin_name: str) -> dict:
+    """Get the integrations for a given plugin.
+
+    Args:
+        plugin_name (str): Name of the plugin to get integrations for
+
+    Returns:
+        dict: Dictionary of integrations for the plugin
+    """
+    return _integrations.get(plugin_name, {})
+
+
 def add_loaded_plugins(plugin_name: str, plugin: Plugin):
     _loaded_plugins[plugin_name] = plugin
 
 
-def integrates(func):
+def plugin_event(func):
+    """Decorator that makes a plugin method integrable with other plugins.
+
+    This decorator enables event-driven integration between plugins. When a decorated 
+    method is called, it will:
+    1. Execute the original method
+    2. Look up any registered integrations for this method
+    3. Execute the integrated functions from other plugins with the appropriate arguments
+
+    The integration configuration should be defined in the plugin's config under the 
+    'integrations' key. Each integration should specify:
+    - plugin_name: The target plugin to integrate with
+    - function: The function to call in the target plugin
+    - args: Arguments to pass to the target function
+        - Use {return_val} to reference a simple return value
+        - Use {key_name} to reference keys from a dictionary return value
+
+    Example config:
+        integrations:
+            send_message: [
+                {
+                    "plugin_name": "discord",
+                    "function": "relay_message",
+                    "args": {
+                        "content": "{message}",
+                        "channel": "general"
+                    }
+                }
+            ]
+
+    Args:
+        func: The plugin method to make integrable
+
+    Returns:
+        wrapper: A wrapped version of the function that handles integrations
+    """
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         # 'self' is the instance of the calling object

@@ -3,7 +3,7 @@ import time
 
 import a2s
 
-from bot_squared.integrator import integrates
+from bot_squared.integrator import plugin_event
 from bot_squared.plugins.plugin_base import PluginBase
 
 DEFAULT_UPDATE_INTERVAL = 60
@@ -31,7 +31,7 @@ class Steam(PluginBase):
         self.steam_server = self.config["steam_server"]
         self.steam_port = self.config["steam_port"]
 
-    @integrates
+    @plugin_event
     def get_server_status(self) -> dict:
         """
         Query the game server status using the A2S protocol with python-a2s.

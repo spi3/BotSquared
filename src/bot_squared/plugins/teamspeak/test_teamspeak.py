@@ -17,7 +17,7 @@ def test_teamspeak(mock_load_config):
 
 
 def test_send_message_integrable(test_teamspeak):
-    assert integrator.get_integrations(test_teamspeak.plugin_name)["send_message"] == test_teamspeak.send_message
+    assert hasattr(test_teamspeak.send_message, '__wrapped__'), "send_message should be decorated with @plugin_event"
 
 
 @patch("ts3.query.TS3Connection")
