@@ -66,6 +66,8 @@ fix-all = "ruff check --fix"
 fix-format = "ruff format ."
 types = "mypy --install-types --non-interactive {args:src/bot_squared tests}"
 format = "ruff check"
+test = "pytest -v --timeout=5"
+test-cov = "pytest --cov=bot_squared --cov-report=term-missing"
 all = [
   "types",
   "format",
