@@ -103,9 +103,9 @@ class Steam(PluginBase):
             "status": "Online",
             "player_count": info.player_count,
             "max_players": info.max_players,
-            "server_name": getattr(info, "server_name", "Unknown"),
-            "map_name": getattr(info, "map_name", "Unknown"),
-            "game": getattr(info, "game", "Unknown"),
+            "server_name": getattr(info, "server_name", None) or "Unknown",
+            "map_name": getattr(info, "map_name", None) or "Unknown",
+            "game": getattr(info, "game", None) or "Unknown",
         }
 
     @plugin_event
