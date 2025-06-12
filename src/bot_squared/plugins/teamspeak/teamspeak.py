@@ -32,6 +32,11 @@ class Teamspeak(PluginBase):
         # Config fields
         self.iteration_rate_hz = None
 
+        # Connection retry settings
+        self.initial_retry_delay = 5  # seconds
+        self.max_retry_delay = 60  # seconds
+        self.retry_backoff_factor = 2
+
         # Inactivity monitoring
         self.user_activity_timestamps: Dict[str, float] = {}  # Maps client IDs to last activity timestamp
         self.inactivity_timeout_minutes = 30
@@ -49,30 +54,61 @@ class Teamspeak(PluginBase):
         )
 
     def _connect(self):
-        self.logger.debug(f"Attempting to connect to TeamSpeak server at {self.ts3_server_ip}")
-        # Connect to the server
-        self.ts3conn = ts3.query.TS3Connection(self.ts3_server_ip)
+        """
+        Attempts to connect to the TeamSpeak server with retry mechanism.
+        Uses exponential backoff for retries with a maximum delay cap.
+        Will retry indefinitely until a successful connection is established.
+        
+        Returns:
+            bool: True if connection successful (will only return on success)
+        """
+        attempt = 0
+        current_delay = self.initial_retry_delay
 
-        # Authenticate with the server
-        self.logger.debug(f"Authenticating with username: {self.ts3_server_query_username}")
-        self.ts3conn.login(
-            client_login_name=self.ts3_server_query_username, client_login_password=self.ts3_server_query_passwd
-        )
+        while True:  # Infinite retry loop
+            try:
+                attempt += 1
+                self.logger.debug(
+                    f"Connection attempt {attempt} to TeamSpeak server at {self.ts3_server_ip}"
+                )
+                
+                # Connect to the server
+                self.ts3conn = ts3.query.TS3Connection(self.ts3_server_ip)
 
-        # Join the server
-        self.logger.debug("Selecting server with SID: 1")
-        self.ts3conn.use(sid=1)
+                # Authenticate with the server
+                self.logger.debug(f"Authenticating with username: {self.ts3_server_query_username}")
+                self.ts3conn.login(
+                    client_login_name=self.ts3_server_query_username, 
+                    client_login_password=self.ts3_server_query_passwd
+                )
 
-        # get my data
-        whoami_data = self.ts3conn.whoami()[0]
-        self.logger.debug(f"Bot identity data: {whoami_data}")
-        server_query_id = whoami_data["client_id"]
+                # Join the server
+                self.logger.debug("Selecting server with SID: 1")
+                self.ts3conn.use(sid=1)
 
-        # move the user to the channel
-        self.logger.debug(f"Moving bot (ID: {server_query_id}) to channel: {self.bot_channel_id}")
-        self.ts3conn.clientmove(cid=self.bot_channel_id, clid=server_query_id)
+                # get my data
+                whoami_data = self.ts3conn.whoami()[0]
+                self.logger.debug(f"Bot identity data: {whoami_data}")
+                server_query_id = whoami_data["client_id"]
 
-        self.logger.info(f"{self.plugin_name} - Connected to {self.bot_channel_id}@{self.ts3_server_ip}")
+                # move the user to the channel
+                self.logger.debug(f"Moving bot (ID: {server_query_id}) to channel: {self.bot_channel_id}")
+                self.ts3conn.clientmove(cid=self.bot_channel_id, clid=server_query_id)
+
+                self.logger.info(f"{self.plugin_name} - Connected to {self.bot_channel_id}@{self.ts3_server_ip}")
+                return True
+
+            except (ts3.query.TS3QueryError, Exception) as e:
+                self.logger.warning(
+                    f"Connection attempt {attempt} failed: {str(e)}. "
+                    f"Retrying in {current_delay} seconds..."
+                )
+                time.sleep(current_delay)
+                # Calculate next delay with exponential backoff, capped at max_retry_delay
+                current_delay = min(
+                    current_delay * self.retry_backoff_factor,
+                    self.max_retry_delay
+                )
 
     @plugin_event
     def send_message(self, message: str, to: int) -> None:
@@ -187,53 +223,57 @@ class Teamspeak(PluginBase):
             self.logger.debug(f"Full error details for inactive user check: {e!s}")
 
     def run(self):
-        # Connect to the server
-        try:
-            self._connect()
-        except Exception as e:
-            self.logger.error(f"{self.plugin_name} - Failed to connect to server: {e}")
-            return
-
-        # Register for the event.
-        self.ts3conn.servernotifyregister(event="server")
-        self.ts3conn.servernotifyregister(event="channel", id_=self.bot_channel_id)
-
-        # If all events are registered at the same time the client
-        # gets flagged for flooding, therefore sleep between calls
-        time.sleep(1)
-        self.ts3conn.servernotifyregister(event="textchannel")
-        self.ts3conn.servernotifyregister(event="textprivate")
-        self.ts3conn.servernotifyregister(event="textserver")
-
-        timeouts = 0
-        last_inactivity_check = time.time()
-
-        while True:
-            self.ts3conn.send_keepalive()
-
-            self.handle_integration_function_queue()
-
-            # Check for inactive users every minute
-            current_time = time.time()
-            if current_time - last_inactivity_check >= INACTIVITY_CHECK_INTERVAL:
-                self.check_inactive_users()
-                last_inactivity_check = current_time
-
+        while True:  # Outer loop for continuous operation
             try:
-                # This method blocks, but we must sent the keepalive message at
-                # least once in 5 minutes to avoid the sever side idle client
-                # disconnect. So we set the timeout parameter simply to 1 minute.
-                events = self.ts3conn.wait_for_event(timeout=1)
+                # Connect to the server with retry mechanism
+                self._connect()
 
-                self.logger.debug(f"{events}")
-                for event in events:
-                    self.logger.debug(f"{self.plugin_name} - Event: {event}")
-                    self.process_event(event)
+                # Register for events
+                self.ts3conn.servernotifyregister(event="server")
+                self.ts3conn.servernotifyregister(event="channel", id_=self.bot_channel_id)
 
-            except ts3.query.TS3TimeoutError:
-                timeouts += 1
-                if timeouts >= MAX_TIMEOUTS:
-                    pass
+                # If all events are registered at the same time the client
+                # gets flagged for flooding, therefore sleep between calls
+                time.sleep(1)
+                self.ts3conn.servernotifyregister(event="textchannel")
+                self.ts3conn.servernotifyregister(event="textprivate")
+                self.ts3conn.servernotifyregister(event="textserver")
+
+                timeouts = 0
+                last_inactivity_check = time.time()
+
+                # Inner loop for normal operation
+                while True:
+                    self.ts3conn.send_keepalive()
+                    self.handle_integration_function_queue()
+
+                    # Check for inactive users every minute
+                    current_time = time.time()
+                    if current_time - last_inactivity_check >= INACTIVITY_CHECK_INTERVAL:
+                        self.check_inactive_users()
+                        last_inactivity_check = current_time
+
+                    try:
+                        # This method blocks, but we must sent the keepalive message at
+                        # least once in 5 minutes to avoid the sever side idle client
+                        # disconnect. So we set the timeout parameter simply to 1 minute.
+                        events = self.ts3conn.wait_for_event(timeout=1)
+
+                        self.logger.debug(f"{events}")
+                        for event in events:
+                            self.logger.debug(f"{self.plugin_name} - Event: {event}")
+                            self.process_event(event)
+
+                    except ts3.query.TS3TimeoutError:
+                        timeouts += 1
+                        if timeouts >= MAX_TIMEOUTS:
+                            pass
+
+            except Exception as e:
+                self.logger.error(f"Connection lost or error occurred: {str(e)}")
+                self.logger.info("Attempting to reconnect...")
+                time.sleep(self.initial_retry_delay)  # Wait before attempting to reconnect
+                continue  # Restart from the beginning of the outer loop
 
     def process_event(self, event):
         self.logger.debug(f"Processing event: {event}")
@@ -378,6 +418,22 @@ class Teamspeak(PluginBase):
         if self.default_config is None:
             self.logger.error("No default config found")
             return
+
+        # Load connection retry settings
+        if "initial_retry_delay" in self.config:
+            self.initial_retry_delay = self.config["initial_retry_delay"]
+        else:
+            self.initial_retry_delay = self.default_config.get("initial_retry_delay", 5)
+
+        if "max_retry_delay" in self.config:
+            self.max_retry_delay = self.config["max_retry_delay"]
+        else:
+            self.max_retry_delay = self.default_config.get("max_retry_delay", 60)
+
+        if "retry_backoff_factor" in self.config:
+            self.retry_backoff_factor = self.config["retry_backoff_factor"]
+        else:
+            self.retry_backoff_factor = self.default_config.get("retry_backoff_factor", 2)
 
         # Load existing config fields
         if "iteration_rate_hz" in self.config:
