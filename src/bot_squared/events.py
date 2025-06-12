@@ -49,7 +49,13 @@ class EventHandler:
 
         Args:
             event: The PluginEvent to publish
+
+        Raises:
+            queue.Empty: If the handler is stopped
         """
+        if not self._running.is_set():
+            error_msg = "Event handler is stopped"
+            raise Empty(error_msg)
         self._event_queue.put(event)
 
     def _process_events(self) -> None:
@@ -99,11 +105,16 @@ class EventHandler:
                                 for arg_name, arg_template in integration["args"].items():
                                     if isinstance(arg_template, str):
                                         # Format the argument using the event's return value
-                                        args[arg_name] = arg_template.format(
-                                            **event.return_value
-                                            if isinstance(event.return_value, dict)
-                                            else {"return_val": event.return_value}
-                                        )
+                                        if isinstance(event.return_value, dict):
+                                            # For dict values, try to format with the dict
+                                            try:
+                                                args[arg_name] = arg_template.format(**event.return_value)
+                                            except KeyError:
+                                                # If formatting fails, use the entire dict as return_val
+                                                args[arg_name] = arg_template.format(return_val=str(event.return_value))
+                                        else:
+                                            # For non-dict values, use as is
+                                            args[arg_name] = arg_template.format(return_val=str(event.return_value))
                                     else:
                                         args[arg_name] = arg_template
 
