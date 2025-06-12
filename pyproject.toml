@@ -28,7 +28,9 @@ dependencies = [
     "pyyaml",
     "ts3",
     "discord.py",
-    "python-a2s"
+    "python-a2s",
+    "tda-api",
+    "selenium"
 ]
 
 [tool.hatch.envs.default.scripts]
@@ -53,12 +55,15 @@ mypy-args = [
   "--no-warn-unused-ignores",
 ]
 
-
 [tool.hatch.envs.check]
 extra-dependencies = [
   "mypy>=1.0.0",
   "ruff",
-  "pytest"
+  "pytest>=7.4.0",
+  "pytest-asyncio>=0.21.0",
+  "pytest-cov>=4.1.0",
+  "pytest-mock>=3.11.1",
+  "pytest-timeout>=2.1.0"
 ]
 
 [tool.hatch.envs.check.scripts]
@@ -79,6 +84,27 @@ fix = [
   "all"
 ]
 
+[tool.pytest.ini_options]
+minversion = "7.4.0"
+addopts = "-ra -q --tb=short"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+timeout = 300
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Tests that take longer to run",
+    "async: Tests that use asyncio"
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+    "ignore::FutureWarning"
+]
+
 [tool.mypy]
 disable_error_code = "import-untyped"
 
@@ -91,8 +117,8 @@ omit = [
 ]
 
 [tool.coverage.paths]
-bot_squared = ["src/bot_squared", "*/bot-squared/src/bot_squared"]
-tests = ["tests", "*/bot-squared/tests"]
+bot_squared = ["src/bot_squared"]
+tests = ["tests", "src/bot_squared/plugins/*/test_*"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -154,7 +180,6 @@ unfixable = [
   # Don't touch unused imports
   "F401",
 ]
-
 
 [tool.ruff.lint.isort]
 known-first-party = ["bot_squared"]
