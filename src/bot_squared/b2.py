@@ -51,7 +51,7 @@ def main(args: Optional[argparse.Namespace] = None):
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
     # Get the plugins from config
-    if config["plugins"] is None:
+    if config["plugins"] is None or not config["plugins"]:
         logger.error(
             "No plugins found in config. Please update your config to include the plugins you want to run. Thank you."
         )
