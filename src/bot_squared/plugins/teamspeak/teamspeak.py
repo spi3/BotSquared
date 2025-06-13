@@ -58,7 +58,7 @@ class Teamspeak(PluginBase):
         Attempts to connect to the TeamSpeak server with retry mechanism.
         Uses exponential backoff for retries with a maximum delay cap.
         Will retry indefinitely until a successful connection is established.
-        
+
         Returns:
             bool: True if connection successful (will only return on success)
         """
@@ -68,18 +68,15 @@ class Teamspeak(PluginBase):
         while True:  # Infinite retry loop
             try:
                 attempt += 1
-                self.logger.debug(
-                    f"Connection attempt {attempt} to TeamSpeak server at {self.ts3_server_ip}"
-                )
-                
+                self.logger.debug(f"Connection attempt {attempt} to TeamSpeak server at {self.ts3_server_ip}")
+
                 # Connect to the server
                 self.ts3conn = ts3.query.TS3Connection(self.ts3_server_ip)
 
                 # Authenticate with the server
                 self.logger.debug(f"Authenticating with username: {self.ts3_server_query_username}")
                 self.ts3conn.login(
-                    client_login_name=self.ts3_server_query_username, 
-                    client_login_password=self.ts3_server_query_passwd
+                    client_login_name=self.ts3_server_query_username, client_login_password=self.ts3_server_query_passwd
                 )
 
                 # Join the server
@@ -100,15 +97,11 @@ class Teamspeak(PluginBase):
 
             except (ts3.query.TS3QueryError, Exception) as e:
                 self.logger.warning(
-                    f"Connection attempt {attempt} failed: {str(e)}. "
-                    f"Retrying in {current_delay} seconds..."
+                    f"Connection attempt {attempt} failed: {e!s}. Retrying in {current_delay} seconds..."
                 )
                 time.sleep(current_delay)
                 # Calculate next delay with exponential backoff, capped at max_retry_delay
-                current_delay = min(
-                    current_delay * self.retry_backoff_factor,
-                    self.max_retry_delay
-                )
+                current_delay = min(current_delay * self.retry_backoff_factor, self.max_retry_delay)
 
     @plugin_event
     def send_message(self, message: str, to: int) -> None:
@@ -270,7 +263,7 @@ class Teamspeak(PluginBase):
                             pass
 
             except Exception as e:
-                self.logger.error(f"Connection lost or error occurred: {str(e)}")
+                self.logger.error(f"Connection lost or error occurred: {e!s}")
                 self.logger.info("Attempting to reconnect...")
                 time.sleep(self.initial_retry_delay)  # Wait before attempting to reconnect
                 continue  # Restart from the beginning of the outer loop

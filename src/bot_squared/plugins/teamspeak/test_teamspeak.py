@@ -11,6 +11,11 @@ from bot_squared.plugins.teamspeak.teamspeak import Teamspeak
 # Constants
 EXPECTED_ADMIN_COUNT = 2
 
+# Constants for test assertions
+MAX_RETRY_ATTEMPTS = 4
+LOGIN_RETRY_ATTEMPTS = 3
+EXTENDED_RETRY_ATTEMPTS = 5
+
 
 @pytest.fixture
 @patch.object(Teamspeak, "load_config", autospec=True)
@@ -289,7 +294,7 @@ def test_process_new_user_join_event_error_handling(mock_connection: MagicMock, 
 @patch("time.sleep")  # Mock sleep to speed up tests
 def test_connect_retry_mechanism(mock_sleep: MagicMock, mock_connection: MagicMock, test_teamspeak):
     """Test the connection retry mechanism with exponential backoff.
-    
+
     Verifies that:
     1. Connection attempts are retried on failure
     2. Backoff delay increases exponentially
@@ -301,7 +306,7 @@ def test_connect_retry_mechanism(mock_sleep: MagicMock, mock_connection: MagicMo
         Exception("Test error"),  # First attempt fails
         Exception("Test error"),  # Second attempt fails
         Exception("Test error"),  # Third attempt fails
-        MagicMock()  # Fourth attempt succeeds
+        MagicMock(),  # Fourth attempt succeeds
     ]
 
     # Set retry parameters for test
@@ -313,7 +318,7 @@ def test_connect_retry_mechanism(mock_sleep: MagicMock, mock_connection: MagicMo
     result = test_teamspeak._connect()
 
     # Verify connection was attempted 4 times
-    assert mock_connection.call_count == 4
+    assert mock_connection.call_count == MAX_RETRY_ATTEMPTS
 
     # Verify sleep delays follow exponential backoff pattern
     expected_delays = [2, 4, 8]  # Initial, 2x, 4x (capped at 8)
@@ -328,7 +333,7 @@ def test_connect_retry_mechanism(mock_sleep: MagicMock, mock_connection: MagicMo
 @patch("time.sleep")
 def test_connect_retry_with_query_error(mock_sleep: MagicMock, mock_connection: MagicMock, test_teamspeak):
     """Test the connection retry mechanism with TS3QueryError.
-    
+
     Verifies that:
     1. TS3QueryError is handled properly
     2. Retry mechanism works with different types of errors
@@ -343,7 +348,7 @@ def test_connect_retry_with_query_error(mock_sleep: MagicMock, mock_connection: 
     connection_instance.login.side_effect = [
         query_error,  # First attempt fails with TS3QueryError
         Exception("Test error"),  # Second attempt fails with connection error
-        None  # Third attempt succeeds
+        None,  # Third attempt succeeds
     ]
     mock_connection.return_value = connection_instance
 
@@ -356,7 +361,7 @@ def test_connect_retry_with_query_error(mock_sleep: MagicMock, mock_connection: 
     result = test_teamspeak._connect()
 
     # Verify connection was attempted 3 times
-    assert connection_instance.login.call_count == 3
+    assert connection_instance.login.call_count == LOGIN_RETRY_ATTEMPTS
 
     # Verify sleep delays
     expected_delays = [1, 2]  # Initial, 2x
@@ -371,7 +376,7 @@ def test_connect_retry_with_query_error(mock_sleep: MagicMock, mock_connection: 
 @patch("time.sleep")
 def test_connect_max_retry_delay(mock_sleep: MagicMock, mock_connection: MagicMock, test_teamspeak):
     """Test that the retry delay is properly capped at max_retry_delay.
-    
+
     Verifies that:
     1. Delay increases exponentially up to max_retry_delay
     2. Delay remains at max_retry_delay for subsequent retries
@@ -382,7 +387,7 @@ def test_connect_max_retry_delay(mock_sleep: MagicMock, mock_connection: MagicMo
         Exception("Test error"),  # Second attempt fails
         Exception("Test error"),  # Third attempt fails
         Exception("Test error"),  # Fourth attempt fails
-        MagicMock()  # Fifth attempt succeeds
+        MagicMock(),  # Fifth attempt succeeds
     ]
 
     # Set retry parameters
@@ -394,7 +399,7 @@ def test_connect_max_retry_delay(mock_sleep: MagicMock, mock_connection: MagicMo
     result = test_teamspeak._connect()
 
     # Verify connection was attempted 5 times
-    assert mock_connection.call_count == 5
+    assert mock_connection.call_count == EXTENDED_RETRY_ATTEMPTS
 
     # Verify sleep delays are capped at max_retry_delay
     expected_delays = [1, 2, 4, 4]  # Initial, 2x, 4x (max), 4x (max)
@@ -408,7 +413,7 @@ def test_connect_max_retry_delay(mock_sleep: MagicMock, mock_connection: MagicMo
 @patch("ts3.query.TS3Connection")
 def test_connect_immediate_success(mock_connection: MagicMock, test_teamspeak):
     """Test successful connection on first attempt.
-    
+
     Verifies that:
     1. Connection succeeds immediately without retries
     2. No sleep delays are introduced
@@ -428,7 +433,7 @@ def test_connect_immediate_success(mock_connection: MagicMock, test_teamspeak):
     # Verify proper connection sequence
     connection_instance.login.assert_called_once_with(
         client_login_name=test_teamspeak.ts3_server_query_username,
-        client_login_password=test_teamspeak.ts3_server_query_passwd
+        client_login_password=test_teamspeak.ts3_server_query_passwd,
     )
     connection_instance.use.assert_called_once_with(sid=1)
     connection_instance.whoami.assert_called_once()
