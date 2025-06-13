@@ -6,9 +6,8 @@ including configuration options, integration methods, and their arguments.
 """
 
 import ast
-import inspect
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from docstring_parser import parse as parse_docstring
 
@@ -35,7 +34,7 @@ class PluginDocExtractor:
         """
         plugin_path = self.plugins_dir / plugin_name
         if not plugin_path.exists():
-            error_msg = "Plugin {} not found at {}".format(plugin_name, plugin_path)
+            error_msg = f"Plugin {plugin_name} not found at {plugin_path}"
             raise ValueError(error_msg)
 
         return {
@@ -44,7 +43,7 @@ class PluginDocExtractor:
             "configuration": self.extract_configuration(plugin_name),
             "integration_methods": self.extract_integration_methods(plugin_name),
             "examples": self._extract_examples(plugin_path),
-            "dependencies": self._extract_dependencies(plugin_path)
+            "dependencies": self._extract_dependencies(plugin_path),
         }
 
     def extract_configuration(self, plugin_name: str) -> List[Dict[str, Any]]:
@@ -61,7 +60,7 @@ class PluginDocExtractor:
             return []
 
         config_options = []
-        with open(config_path, 'r') as f:
+        with open(config_path) as f:
             module = ast.parse(f.read())
 
         for node in ast.walk(module):
@@ -72,7 +71,7 @@ class PluginDocExtractor:
                             "name": item.target.id,
                             "type": self._get_type_hint(item.annotation),
                             "description": self._get_docstring_from_assignment(item),
-                            "default": self._get_default_value(item.value) if item.value else None
+                            "default": self._get_default_value(item.value) if item.value else None,
                         }
                         config_options.append(option)
 
@@ -87,13 +86,16 @@ class PluginDocExtractor:
         Returns:
             List of dictionaries containing method details
         """
-        # Look for the plugin class in ${plugin_name}.py
+        # First try ${plugin_name}.py
         plugin_file = self.plugins_dir / plugin_name / f"{plugin_name}.py"
         if not plugin_file.exists():
-            return []
+            # Fallback to __init__.py if the main file doesn't exist
+            plugin_file = self.plugins_dir / plugin_name / "__init__.py"
+            if not plugin_file.exists():
+                return []
 
         methods = []
-        with open(plugin_file, 'r') as f:
+        with open(plugin_file) as f:
             module = ast.parse(f.read())
 
         for node in ast.walk(module):
@@ -104,23 +106,26 @@ class PluginDocExtractor:
                         return_type = self._get_type_hint(item.returns) if item.returns else None
                         if docstring:
                             parsed_doc = parse_docstring(docstring)
-                            methods.append({
-                                "name": item.name,
-                                "description": parsed_doc.short_description,
-                                "long_description": parsed_doc.long_description,
-                                "arguments": [
-                                    {
-                                        "name": param.arg_name,
-                                        "type": param.type_name,
-                                        "description": param.description
-                                    }
-                                    for param in parsed_doc.params
-                                ],
-                                "returns": {
-                                    "type": return_type or (parsed_doc.returns.type_name if parsed_doc.returns else None),
-                                    "description": parsed_doc.returns.description if parsed_doc.returns else None
+                            methods.append(
+                                {
+                                    "name": item.name,
+                                    "description": parsed_doc.short_description,
+                                    "long_description": parsed_doc.long_description,
+                                    "arguments": [
+                                        {
+                                            "name": param.arg_name,
+                                            "type": param.type_name,
+                                            "description": param.description,
+                                        }
+                                        for param in parsed_doc.params
+                                    ],
+                                    "returns": {
+                                        "type": return_type
+                                        or (parsed_doc.returns.type_name if parsed_doc.returns else None),
+                                        "description": parsed_doc.returns.description if parsed_doc.returns else None,
+                                    },
                                 }
-                            })
+                            )
 
         return methods
 
@@ -129,14 +134,14 @@ class PluginDocExtractor:
         # First try ${plugin_name}.py
         plugin_name = plugin_path.name
         main_file = plugin_path / f"{plugin_name}.py"
-        
+
         if not main_file.exists():
             # Fallback to __init__.py if the main file doesn't exist
             main_file = plugin_path / "__init__.py"
             if not main_file.exists():
                 return None
 
-        with open(main_file, 'r') as f:
+        with open(main_file) as f:
             module = ast.parse(f.read())
             return ast.get_docstring(module)
 
@@ -147,7 +152,7 @@ class PluginDocExtractor:
             return []
 
         examples = []
-        with open(examples_path, 'r') as f:
+        with open(examples_path) as f:
             file_content = f.read()
             module = ast.parse(file_content)
 
@@ -159,13 +164,15 @@ class PluginDocExtractor:
                     start_line = node.lineno - 1  # ast line numbers are 1-based
                     end_line = node.end_lineno
                     function_lines = file_content.splitlines()[start_line:end_line]
-                    function_source = '\n'.join(function_lines)
+                    function_source = "\n".join(function_lines)
 
-                    examples.append({
-                        "title": node.name.replace('_', ' ').title(),
-                        "description": docstring,
-                        "code": function_source
-                    })
+                    examples.append(
+                        {
+                            "title": node.name.replace("_", " ").title(),
+                            "description": docstring,
+                            "code": function_source,
+                        }
+                    )
 
         return examples
 
@@ -175,8 +182,13 @@ class PluginDocExtractor:
         if not req_path.exists():
             return []
 
-        with open(req_path, 'r') as f:
-            return [line.strip() for line in f if line.strip() and not line.startswith('#')]
+        dependencies: List[str] = []
+        with open(req_path) as f:
+            for line in f:
+                stripped = line.strip()
+                if stripped and not stripped.startswith("#"):
+                    dependencies.append(stripped)
+        return dependencies
 
     @staticmethod
     def _get_type_hint(node: ast.AST) -> str:
@@ -193,7 +205,7 @@ class PluginDocExtractor:
     @staticmethod
     def _get_docstring_from_assignment(node: ast.AST) -> Optional[str]:
         """Extract docstring from assignment node's parent class."""
-        if hasattr(node, 'parent') and isinstance(node.parent, ast.ClassDef):
+        if hasattr(node, "parent") and isinstance(node.parent, ast.ClassDef):
             for item in node.parent.body:
                 if isinstance(item, ast.Expr) and isinstance(item.value, ast.Str):
                     return item.value.s
@@ -207,9 +219,18 @@ class PluginDocExtractor:
         if isinstance(node, ast.Constant):
             return repr(node.value)
         elif isinstance(node, ast.List):
-            return f"[{', '.join(PluginDocExtractor._get_default_value(elt) for elt in node.elts)}]"
+            values = []
+            for elt in node.elts:
+                val = PluginDocExtractor._get_default_value(elt)
+                if val is not None:
+                    values.append(val)
+            return f"[{', '.join(values)}]"
         elif isinstance(node, ast.Dict):
-            keys = [PluginDocExtractor._get_default_value(k) for k in node.keys]
-            values = [PluginDocExtractor._get_default_value(v) for v in node.values]
-            return f"{{{', '.join(f'{k}: {v}' for k, v in zip(keys, values))}}}"
+            items = []
+            for k, v in zip(node.keys, node.values):
+                key = PluginDocExtractor._get_default_value(k)
+                val = PluginDocExtractor._get_default_value(v)
+                if key is not None and val is not None:
+                    items.append(f"{key}: {val}")
+            return f"{{{', '.join(items)}}}"
         return "None"

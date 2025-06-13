@@ -9,4 +9,4 @@ and usage examples.
 from bot_squared.documentation.generator.doc_extractor import PluginDocExtractor
 from bot_squared.documentation.generator.html_generator import DocumentationGenerator
 
-__all__ = ['DocumentationGenerator', 'PluginDocExtractor']
+__all__ = ["DocumentationGenerator", "PluginDocExtractor"]
