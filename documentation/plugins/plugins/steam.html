@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>steam - Bot Squared Plugin Documentation</title>
+    <link rel="stylesheet" href="../static/pygments.css">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #2c3e50;
+            --background-color: #f5f6fa;
+            --text-color: #2c3e50;
+            --border-color: #dcdde1;
+            --code-background: #2f3640;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--secondary-color);
+            margin: 1.5rem 0 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        code {
+            font-family: 'Fira Code', 'Courier New', Courier, monospace;
+            background-color: var(--code-background);
+            color: #fff;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background-color: var(--code-background);
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .method {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .argument {
+            margin-left: 1.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .search-container {
+            margin: 2rem 0;
+        }
+
+        #search {
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        #search:focus {
+            border-color: var(--primary-color);
+        }
+
+        .plugin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .plugin-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+
+        .plugin-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .plugin-card h3 {
+            margin-top: 0;
+        }
+
+        .plugin-card p {
+            color: #666;
+            margin: 0.5rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            nav {
+                padding: 0 1rem;
+            }
+
+            .plugin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="../index.html">Home</a>
+            <div>
+                <a href="https://github.com/yourusername/bot_squared" target="_blank">GitHub</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        
+<h1>steam</h1>
+
+<div class="card">
+    <h2>Description</h2>
+    
+    <p>Steam Plugin Module for Bot Squared</p>
+
+<p>This module provides functionality to monitor and query Steam game servers using the A2S protocol.
+It implements a plugin that periodically checks the status of a specified Steam game server,
+including player count and server availability.</p>
+
+<p>Dependencies:
+    - python-a2s: For querying Steam game servers using the A2S protocol
+    - bot<em>squared.integrator: For plugin event handling
+    - bot</em>squared.plugins.plugin_base: Base plugin functionality</p>
+
+    
+</div>
+
+
+
+
+<div class="card">
+    <h2>Integration Methods</h2>
+    
+    <div class="method">
+        <h3><code>__init__</code></h3>
+        <p>Initialize the Steam plugin.</p>
+        
+
+        
+        <h4>Arguments</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td><code>plugin_name</code></td>
+                    <td><code>str</code></td>
+                    <td>Name identifier for the plugin instance</td>
+                </tr>
+                
+                <tr>
+                    <td><code>config</code></td>
+                    <td><code>dict</code></td>
+                    <td>Configuration dictionary containing server settings</td>
+                </tr>
+                
+            </tbody>
+        </table>
+        
+
+        
+        <h4>Returns</h4>
+        <p><code>None</code>: No description available.</p>
+        
+    </div>
+    
+    <div class="method">
+        <h3><code>_format_server_info</code></h3>
+        <p>Format server information into a standardized dictionary.</p>
+        
+
+        
+        <h4>Arguments</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td><code>info</code></td>
+                    <td><code>Any</code></td>
+                    <td>Server information object from A2S query</td>
+                </tr>
+                
+            </tbody>
+        </table>
+        
+
+        
+        <h4>Returns</h4>
+        <p><code>Dict[Any]</code>: Formatted server information</p>
+        
+    </div>
+    
+    <div class="method">
+        <h3><code>get_server_status</code></h3>
+        <p>Query the game server status using the A2S protocol.</p>
+        
+        <p>This method attempts to connect to the configured Steam game server
+and retrieve its current status information using the A2S protocol.</p>
+        
+
+        
+
+        
+        <h4>Returns</h4>
+        <p><code>Dict[Any]</code>: Server status information with the following keys:
+- status (str): &#39;Online&#39; if server is reachable, &#39;Offline&#39; otherwise
+- player_count (int): Number of players currently on the server
+- max_players (int): Maximum player capacity of the server
+- server_name (str): Name of the server if available
+- map_name (str): Current map name if available
+- game (str): Game name if available</p>
+        
+    </div>
+    
+    <div class="method">
+        <h3><code>run</code></h3>
+        <p>Main plugin execution loop.</p>
+        
+        <p>This method runs continuously, periodically checking the server status
+and handling any pending integration functions. The check interval is
+determined by the update_interval configuration.</p>
+        
+
+        
+
+        
+        <h4>Returns</h4>
+        <p><code>None</code>: No description available.</p>
+        
+    </div>
+    
+</div>
+
+
+
+
+
+
+    </div>
+
+    <script>
+        // Add search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const plugins = document.querySelectorAll('.plugin-card');
+                    
+                    plugins.forEach(plugin => {
+                        const title = plugin.querySelector('h3').textContent.toLowerCase();
+                        const description = plugin.querySelector('p').textContent.toLowerCase();
+                        
+                        if (title.includes(searchTerm) || description.includes(searchTerm)) {
+                            plugin.style.display = '';
+                        } else {
+                            plugin.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+    
+</body>
+</html> 
