@@ -12,10 +12,10 @@ def validate_function_integrations(function_integrations: list) -> None:
     :return: None
     """
     logger.debug(f"Validating function integrations: {function_integrations}")
-    
+
     for integration in function_integrations:
         logger.debug(f"Validating integration: {integration}")
-        
+
         if not isinstance(integration, dict):
             msg = "Integration must be a dictionary"
             logger.error(msg)
@@ -40,7 +40,7 @@ def validate_function_integrations(function_integrations: list) -> None:
             msg = 'Integration "args" must be a dictionary'
             logger.error(msg)
             raise ValueError(msg)
-            
+
         logger.debug(f"Integration validation successful: {integration}")
 
 
@@ -52,7 +52,7 @@ def validate_integrations(integrations: dict) -> None:
     :return: None
     """
     logger.debug(f"Validating integrations: {integrations}")
-    
+
     if not isinstance(integrations, dict):
         msg = "Integrations must be a dictionary"
         logger.error(msg)
@@ -72,7 +72,7 @@ def validate_config(config: dict) -> None:
     :return: None
     """
     logger.debug(f"Validating configuration: {config}")
-    
+
     if "plugins" not in config:
         msg = 'Configuration must contain a "plugins" key'
         logger.error(msg)
@@ -105,7 +105,7 @@ def validate_config(config: dict) -> None:
             msg = f'Plugin {plugin_name} "plugin_type" must be a string'
             logger.error(msg)
             raise ValueError(msg)
-            
+
         logger.debug(f"Attempting to import plugin module: plugins.{plugin['plugin_type']}")
         try:
             importlib.import_module(f"plugins.{plugin['plugin_type']}")
@@ -120,7 +120,7 @@ def validate_config(config: dict) -> None:
             integrations = plugin["integrations"]
             validate_integrations(integrations)
             logger.debug(f"Plugin integrations validation successful: {plugin_name}")
-            
+
         logger.debug(f"Plugin validation successful: {plugin_name}")
-    
+
     logger.debug("Configuration validation completed successfully")
