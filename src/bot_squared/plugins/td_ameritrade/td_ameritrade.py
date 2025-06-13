@@ -1,22 +1,20 @@
 import logging
-import time
-import asyncio
 import os
+import time
 from datetime import datetime, timedelta, timezone
-from time import sleep
-from functools import wraps
 
 from selenium import webdriver
 from tda.auth import easy_client
 from tda.client import Client
+
 from bot_squared.utils.decorators import rate_limit
 
 
 class TDAmeritrade:
     def __init__(self, api_key=None, rate_limit=None):
         self.logger = logging.getLogger(__name__)
-        self.api_key = api_key or os.getenv('TD_API_KEY')
-        self.rate_limit = rate_limit or float(os.getenv('TD_RATE_LIMIT', 0))
+        self.api_key = api_key or os.getenv("TD_API_KEY")
+        self.rate_limit = rate_limit or float(os.getenv("TD_RATE_LIMIT", "0"))
 
         self.yearly_charts = {}
         self.last_api_call = time.time()
@@ -72,8 +70,7 @@ class TDAmeritrade:
 
         :return: True if the market is open, False otherwise.
         """
-        market = self.tda_api.get_hours_for_single_market(Client.Markets.EQUITY,
-                                    datetime.now(timezone.utc)).json()
+        market = self.tda_api.get_hours_for_single_market(Client.Markets.EQUITY, datetime.now(timezone.utc)).json()
         is_open = False
         variable_key = "EQ"
         if "EQ" in market["equity"]:
@@ -108,9 +105,7 @@ class TDAmeritrade:
         now = datetime.now(timezone(-timedelta(hours=5)))
 
         if self.current_trading_session is not None:
-            session = datetime.strptime(self.current_trading_session["date"], "%Y-%m-%d").replace(
-                tzinfo=timezone.utc
-            )
+            session = datetime.strptime(self.current_trading_session["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
 
             # this is the current session still
             # it has to be either now or in the future, otherwise get a new session
@@ -154,17 +149,14 @@ class TDAmeritrade:
         now = datetime.now(timezone(-timedelta(hours=5)))
 
         if self.current_trading_session is not None:
-            session = datetime.strptime(self.current_trading_session["date"], "%Y-%m-%d").replace(
-                tzinfo=timezone.utc
-            )
+            session = datetime.strptime(self.current_trading_session["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
 
             # this is the same day
             if session.day == now.day and session.month == now.month and session.year == now.year:
                 return session["sessionHours"]["regularMarket"][0]["end"]
 
         else:  # No saved session data, call api
-            market = self.tda_api.get_hours_for_single_market(Client.Markets.EQUITY,
-                                                                  datetime.now(timezone.utc)).json()
+            market = self.tda_api.get_hours_for_single_market(Client.Markets.EQUITY, datetime.now(timezone.utc)).json()
             variable_key = "EQ"
             if "EQ" in market["equity"]:
                 variable_key = "EQ"
