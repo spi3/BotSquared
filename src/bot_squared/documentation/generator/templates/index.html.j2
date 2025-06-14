@@ -16,7 +16,7 @@
         {% for plugin in category_plugins %}
         <a href="plugins/{{ plugin.name }}.html" class="plugin-card" style="text-decoration: none; color: inherit;">
             <h3>{{ plugin.name }}</h3>
-            <p>{{ plugin.description | truncate(150) if plugin.description else 'No description available.' }}</p>
+            {{ plugin.description | truncate(150) if plugin.description else 'No description available.' }}
             <div style="margin-top: 1rem;">
                 {% if plugin.plugin_events %}
                 <span class="badge" style="background-color: var(--primary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em; margin-right: 0.5rem;">
