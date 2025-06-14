@@ -1,8 +1,0 @@
-services:
-  app:
-    image: botsquared
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - ./config:/data
