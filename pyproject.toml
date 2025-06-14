@@ -91,7 +91,7 @@ fix = [
 [tool.pytest.ini_options]
 minversion = "7.4.0"
 addopts = "-ra -q --tb=short"
-testpaths = ["tests"]
+testpaths = ["tests", "src/bot_squared/plugins/"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
