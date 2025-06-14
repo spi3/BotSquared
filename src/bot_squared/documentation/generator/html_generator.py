@@ -38,8 +38,9 @@ class DocumentationGenerator:
 
         # Add custom tests
         def is_public_method(method: Dict[str, Any]) -> bool:
-            return not method['name'].startswith('_')
-        self.jinja_env.tests['public_method'] = is_public_method
+            return not method["name"].startswith("_")
+
+        self.jinja_env.tests["public_method"] = is_public_method
 
         # Set up markdown converter
         self.markdown = markdown2.Markdown(extras=["fenced-code-blocks", "tables"])
