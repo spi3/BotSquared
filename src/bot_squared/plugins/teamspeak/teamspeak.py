@@ -18,7 +18,7 @@ INACTIVITY_CHECK_INTERVAL: int = 60  # seconds
 
 class Teamspeak(PluginBase):
     """TeamSpeak plugin for bot_squared.
-    
+
     This plugin provides integration with TeamSpeak servers, allowing the bot to:
     - Send and receive messages
     - Monitor user activity
@@ -132,7 +132,7 @@ class Teamspeak(PluginBase):
     @plugin_event
     def receive_message(self):
         """Handle incoming messages from TeamSpeak.
-        
+
         This method is called when a message is received from any TeamSpeak client.
         """
         pass
@@ -140,7 +140,7 @@ class Teamspeak(PluginBase):
     @plugin_event
     def set_channel_name(self, channel_id: int, name: str) -> None:
         """Set the name of a TeamSpeak channel.
-        
+
         Args:
             channel_id (int): The ID of the channel to rename
             name (str): The new name for the channel
@@ -237,7 +237,7 @@ class Teamspeak(PluginBase):
 
     def run(self):
         """Main plugin execution loop.
-        
+
         This method runs continuously, handling TeamSpeak events and maintaining
         the connection to the server. It:
         - Maintains the connection to the TeamSpeak server
