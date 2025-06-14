@@ -102,6 +102,23 @@ class PluginDocExtractor:
             if isinstance(node, ast.ClassDef):
                 for item in node.body:
                     if isinstance(item, ast.FunctionDef):
+                        # Skip private methods (those starting with _)
+                        if item.name.startswith('_'):
+                            continue
+
+                        # Check if the function is decorated with plugin_event
+                        is_plugin_event = False
+                        if item.decorator_list:
+                            for decorator in item.decorator_list:
+                                if isinstance(decorator, ast.Name) and decorator.id == 'plugin_event':
+                                    is_plugin_event = True
+                                    break
+                                elif (isinstance(decorator, ast.Call) and
+                                      isinstance(decorator.func, ast.Name) and
+                                      decorator.func.id == 'plugin_event'):
+                                    is_plugin_event = True
+                                    break
+
                         docstring = ast.get_docstring(item)
                         return_type = self._get_type_hint(item.returns) if item.returns else None
                         if docstring:
@@ -124,6 +141,7 @@ class PluginDocExtractor:
                                         or (parsed_doc.returns.type_name if parsed_doc.returns else None),
                                         "description": parsed_doc.returns.description if parsed_doc.returns else None,
                                     },
+                                    "is_plugin_event": is_plugin_event,
                                 }
                             )
 
