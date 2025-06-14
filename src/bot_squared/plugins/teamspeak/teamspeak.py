@@ -1,4 +1,13 @@
-# from interfaces.chat_bot import ChatBot
+"""TeamSpeak plugin for bot_squared.
+
+This plugin provides integration with TeamSpeak servers, allowing the bot to:
+- Send and receive messages
+- Monitor user activity
+- Manage channel names
+- Handle user joins and notifications
+- Move inactive users to AFK channel
+"""
+
 import logging
 import time
 from pathlib import Path
@@ -156,6 +165,7 @@ class Teamspeak(PluginBase):
             self.logger.error(f"Invalid template variable in channel {channel_id}: {e}")
             self.logger.debug(f"Template error details: {e!s}")
 
+    @plugin_event
     def _update_user_activity(self, client_id: str):
         """Update the last activity timestamp for a user.
 
