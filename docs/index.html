@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>steam - Bot Squared Plugin Documentation</title>
-    <link rel="stylesheet" href="../static/pygments.css">
+    <title>Bot Squared Plugin Documentation</title>
+    <link rel="stylesheet" href="static/pygments.css">
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -202,7 +202,7 @@
 <body>
     <header>
         <nav>
-            <a href="../index.html">Home</a>
+            <a href="index.html">Home</a>
             <div>
                 <a href="https://github.com/yourusername/bot_squared" target="_blank">GitHub</a>
             </div>
@@ -211,147 +211,74 @@
 
     <div class="container">
         
-<h1>steam</h1>
+<h1>Bot Squared Plugin Documentation</h1>
 
-<div class="card">
-    <h2>Description</h2>
-    
-    <p>Steam Plugin Module for Bot Squared</p>
-
-<p>This module provides functionality to monitor and query Steam game servers using the A2S protocol.
-It implements a plugin that periodically checks the status of a specified Steam game server,
-including player count and server availability.</p>
-
-<p>Dependencies:
-    - python-a2s: For querying Steam game servers using the A2S protocol
-    - bot<em>squared.integrator: For plugin event handling
-    - bot</em>squared.plugins.plugin_base: Base plugin functionality</p>
-
-    
+<div class="search-container">
+    <input type="text" id="search" placeholder="Search plugins...">
 </div>
 
 
-
-
-<div class="card">
-    <h2>Integration Methods</h2>
-    
-    <div class="method">
-        <h3><code>__init__</code></h3>
-        <p>Initialize the Steam plugin.</p>
+<section>
+    <h2>Uncategorized</h2>
+    <div class="plugin-grid">
         
-
-        
-        <h4>Arguments</h4>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
+        <a href="plugins/discord.html" class="plugin-card" style="text-decoration: none; color: inherit;">
+            <h3>discord</h3>
+            <p>No description available.</p>
+            <div style="margin-top: 1rem;">
                 
-                <tr>
-                    <td><code>plugin_name</code></td>
-                    <td><code>str</code></td>
-                    <td>Name identifier for the plugin instance</td>
-                </tr>
                 
-                <tr>
-                    <td><code>config</code></td>
-                    <td><code>dict</code></td>
-                    <td>Configuration dictionary containing server settings</td>
-                </tr>
-                
-            </tbody>
-        </table>
+            </div>
+        </a>
         
+        <a href="plugins/steam.html" class="plugin-card" style="text-decoration: none; color: inherit;">
+            <h3>steam</h3>
+            <p>&lt;p&gt;Steam Plugin Module for Bot Squared&lt;/p&gt;
 
+&lt;p&gt;This module provides functionality to monitor and query Steam game servers using the A2S...</p>
+            <div style="margin-top: 1rem;">
+                
+                <span class="badge" style="background-color: var(--primary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em; margin-right: 0.5rem;">
+                    2 Methods
+                </span>
+                
+                
+            </div>
+        </a>
         
-        <h4>Returns</h4>
-        <p><code>None</code>: No description available.</p>
+        <a href="plugins/td_ameritrade.html" class="plugin-card" style="text-decoration: none; color: inherit;">
+            <h3>td_ameritrade</h3>
+            <p>No description available.</p>
+            <div style="margin-top: 1rem;">
+                
+                
+            </div>
+        </a>
+        
+        <a href="plugins/teamspeak.html" class="plugin-card" style="text-decoration: none; color: inherit;">
+            <h3>teamspeak</h3>
+            <p>No description available.</p>
+            <div style="margin-top: 1rem;">
+                
+                <span class="badge" style="background-color: var(--primary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em; margin-right: 0.5rem;">
+                    1 Method
+                </span>
+                
+                
+            </div>
+        </a>
+        
+        <a href="plugins/template.html" class="plugin-card" style="text-decoration: none; color: inherit;">
+            <h3>template</h3>
+            <p>No description available.</p>
+            <div style="margin-top: 1rem;">
+                
+                
+            </div>
+        </a>
         
     </div>
-    
-    <div class="method">
-        <h3><code>_format_server_info</code></h3>
-        <p>Format server information into a standardized dictionary.</p>
-        
-
-        
-        <h4>Arguments</h4>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                
-                <tr>
-                    <td><code>info</code></td>
-                    <td><code>Any</code></td>
-                    <td>Server information object from A2S query</td>
-                </tr>
-                
-            </tbody>
-        </table>
-        
-
-        
-        <h4>Returns</h4>
-        <p><code>Dict[Any]</code>: Formatted server information</p>
-        
-    </div>
-    
-    <div class="method">
-        <h3><code>get_server_status</code></h3>
-        <p>Query the game server status using the A2S protocol.</p>
-        
-        <p>This method attempts to connect to the configured Steam game server
-and retrieve its current status information using the A2S protocol.</p>
-        
-
-        
-
-        
-        <h4>Returns</h4>
-        <p><code>Dict[Any]</code>: Server status information with the following keys:
-- status (str): &#39;Online&#39; if server is reachable, &#39;Offline&#39; otherwise
-- player_count (int): Number of players currently on the server
-- max_players (int): Maximum player capacity of the server
-- server_name (str): Name of the server if available
-- map_name (str): Current map name if available
-- game (str): Game name if available</p>
-        
-    </div>
-    
-    <div class="method">
-        <h3><code>run</code></h3>
-        <p>Main plugin execution loop.</p>
-        
-        <p>This method runs continuously, periodically checking the server status
-and handling any pending integration functions. The check interval is
-determined by the update_interval configuration.</p>
-        
-
-        
-
-        
-        <h4>Returns</h4>
-        <p><code>None</code>: No description available.</p>
-        
-    </div>
-    
-</div>
-
-
-
-
+</section>
 
 
     </div>

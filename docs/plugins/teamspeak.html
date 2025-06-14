@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bot Squared Plugin Documentation</title>
-    <link rel="stylesheet" href="static/pygments.css">
+    <title>teamspeak - Bot Squared Plugin Documentation</title>
+    <link rel="stylesheet" href="../static/pygments.css">
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -202,7 +202,7 @@
 <body>
     <header>
         <nav>
-            <a href="index.html">Home</a>
+            <a href="../index.html">Home</a>
             <div>
                 <a href="https://github.com/yourusername/bot_squared" target="_blank">GitHub</a>
             </div>
@@ -211,78 +211,70 @@
 
     <div class="container">
         
-<h1>Bot Squared Plugin Documentation</h1>
+<h1>teamspeak</h1>
 
-<div class="search-container">
-    <input type="text" id="search" placeholder="Search plugins...">
+<div class="card">
+    <h2>Description</h2>
+    
+    <p>No description available.</p>
+    
 </div>
 
 
-<section>
-    <h2>Uncategorized</h2>
-    <div class="plugin-grid">
-        
-        <a href="plugins/discord.html" class="plugin-card" style="text-decoration: none; color: inherit;">
-            <h3>discord</h3>
-            <p>No description available.</p>
-            <div style="margin-top: 1rem;">
-                
-                
-            </div>
-        </a>
-        
-        <a href="plugins/steam.html" class="plugin-card" style="text-decoration: none; color: inherit;">
-            <h3>steam</h3>
-            <p>&lt;p&gt;Steam Plugin Module for Bot Squared&lt;/p&gt;
 
-&lt;p&gt;This module provides functionality to monitor and query Steam game servers using the A2S...</p>
-            <div style="margin-top: 1rem;">
-                
-                <span class="badge" style="background-color: var(--primary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em; margin-right: 0.5rem;">
-                    4 Methods
-                </span>
-                
-                
-            </div>
-        </a>
+
+<div class="card">
+    <h2>Integration Methods</h2>
+    
+    <div class="method">
+        <h3><code>send_message</code></h3>
         
-        <a href="plugins/td_ameritrade.html" class="plugin-card" style="text-decoration: none; color: inherit;">
-            <h3>td_ameritrade</h3>
-            <p>No description available.</p>
-            <div style="margin-top: 1rem;">
-                
-                <span class="badge" style="background-color: var(--primary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em; margin-right: 0.5rem;">
-                    2 Methods
-                </span>
-                
-                
-            </div>
-        </a>
+        <span class="badge" style="background-color: var(--accent-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em; margin-left: 0.5rem;">
+            Plugin Event
+        </span>
         
-        <a href="plugins/teamspeak.html" class="plugin-card" style="text-decoration: none; color: inherit;">
-            <h3>teamspeak</h3>
-            <p>No description available.</p>
-            <div style="margin-top: 1rem;">
-                
-                <span class="badge" style="background-color: var(--primary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em; margin-right: 0.5rem;">
-                    5 Methods
-                </span>
-                
-                
-            </div>
-        </a>
+        <p>Send a message to a target on TeamSpeak.</p>
         
-        <a href="plugins/template.html" class="plugin-card" style="text-decoration: none; color: inherit;">
-            <h3>template</h3>
-            <p>No description available.</p>
-            <div style="margin-top: 1rem;">
+
+        
+        <h4>Arguments</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
                 
+                <tr>
+                    <td><code>message</code></td>
+                    <td><code>str</code></td>
+                    <td>The message to send</td>
+                </tr>
                 
-            </div>
-        </a>
+                <tr>
+                    <td><code>to</code></td>
+                    <td><code>int</code></td>
+                    <td>The target ID to send the message to</td>
+                </tr>
+                
+            </tbody>
+        </table>
+        
+
+        
+        <h4>Returns</h4>
+        <p><code>None</code>: No description available.</p>
         
     </div>
-</section>
+    
+</div>
+
+
+
+
 
 
     </div>

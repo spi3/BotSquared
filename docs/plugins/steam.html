@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>teamspeak - Bot Squared Plugin Documentation</title>
+    <title>steam - Bot Squared Plugin Documentation</title>
     <link rel="stylesheet" href="../static/pygments.css">
     <style>
         :root {
@@ -211,12 +211,22 @@
 
     <div class="container">
         
-<h1>teamspeak</h1>
+<h1>steam</h1>
 
 <div class="card">
     <h2>Description</h2>
     
-    <p>No description available.</p>
+    <p>Steam Plugin Module for Bot Squared</p>
+
+<p>This module provides functionality to monitor and query Steam game servers using the A2S protocol.
+It implements a plugin that periodically checks the status of a specified Steam game server,
+including player count and server availability.</p>
+
+<p>Dependencies:
+    - python-a2s: For querying Steam game servers using the A2S protocol
+    - bot<em>squared.integrator: For plugin event handling
+    - bot</em>squared.plugins.plugin_base: Base plugin functionality</p>
+
     
 </div>
 
@@ -227,135 +237,42 @@
     <h2>Integration Methods</h2>
     
     <div class="method">
-        <h3><code>_connect</code></h3>
-        <p>Attempts to connect to the TeamSpeak server with retry mechanism.</p>
+        <h3><code>get_server_status</code></h3>
         
-        <p>Uses exponential backoff for retries with a maximum delay cap.
-Will retry indefinitely until a successful connection is established.</p>
+        <span class="badge" style="background-color: var(--accent-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em; margin-left: 0.5rem;">
+            Plugin Event
+        </span>
         
-
+        <p>Query the game server status using the A2S protocol.</p>
         
-
-        
-        <h4>Returns</h4>
-        <p><code>bool</code>: True if connection successful (will only return on success)</p>
-        
-    </div>
-    
-    <div class="method">
-        <h3><code>send_message</code></h3>
-        <p>Send a message to a target on TeamSpeak.</p>
-        
-
-        
-        <h4>Arguments</h4>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                
-                <tr>
-                    <td><code>message</code></td>
-                    <td><code>str</code></td>
-                    <td>The message to send</td>
-                </tr>
-                
-                <tr>
-                    <td><code>to</code></td>
-                    <td><code>int</code></td>
-                    <td>The target ID to send the message to</td>
-                </tr>
-                
-            </tbody>
-        </table>
-        
-
-        
-        <h4>Returns</h4>
-        <p><code>None</code>: No description available.</p>
-        
-    </div>
-    
-    <div class="method">
-        <h3><code>update_user_activity</code></h3>
-        <p>Update the last activity timestamp for a user.</p>
-        
-
-        
-        <h4>Arguments</h4>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                
-                <tr>
-                    <td><code>client_id</code></td>
-                    <td><code>str</code></td>
-                    <td>The client ID of the user</td>
-                </tr>
-                
-            </tbody>
-        </table>
-        
-
-        
-        <h4>Returns</h4>
-        <p><code>None</code>: No description available.</p>
-        
-    </div>
-    
-    <div class="method">
-        <h3><code>check_inactive_users</code></h3>
-        <p>Check for inactive users and move them to the AFK channel if needed.</p>
+        <p>This method attempts to connect to the configured Steam game server
+and retrieve its current status information using the A2S protocol.</p>
         
 
         
 
         
         <h4>Returns</h4>
-        <p><code>None</code>: No description available.</p>
+        <p><code>Dict[Any]</code>: Server status information with the following keys:
+- status (str): &#39;Online&#39; if server is reachable, &#39;Offline&#39; otherwise
+- player_count (int): Number of players currently on the server
+- max_players (int): Maximum player capacity of the server
+- server_name (str): Name of the server if available
+- map_name (str): Current map name if available
+- game (str): Game name if available</p>
         
     </div>
     
     <div class="method">
-        <h3><code>process_join_event</code></h3>
-        <p>Process a user join event.</p>
+        <h3><code>run</code></h3>
         
-        <p>This method:
-1. Sends a welcome message to new users (those with only the Guest group)
-2. Notifies the admin group about the new user</p>
+        <p>Main plugin execution loop.</p>
+        
+        <p>This method runs continuously, periodically checking the server status
+and handling any pending integration functions. The check interval is
+determined by the update_interval configuration.</p>
         
 
-        
-        <h4>Arguments</h4>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                </tr>
-            </thead>
-            <tbody>
-                
-                <tr>
-                    <td><code>event</code></td>
-                    <td><code>dict</code></td>
-                    <td>The join event containing user information</td>
-                </tr>
-                
-            </tbody>
-        </table>
         
 
         

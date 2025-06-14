@@ -25,7 +25,7 @@ def main():
     parser.add_argument(
         "--output-dir",
         type=str,
-        default=os.path.join("documentation", "plugins"),
+        default=os.path.join("docs"),
         help="Path where documentation will be generated",
     )
     parser.add_argument(
