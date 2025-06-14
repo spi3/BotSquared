@@ -175,3 +175,4 @@ cython_debug/
 .vscode
 config.yaml
 src/bot_squared/_version.py
+test_env/
