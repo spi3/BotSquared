@@ -2,7 +2,7 @@ import logging
 from functools import wraps
 from typing import Dict, Optional
 
-from bot_squared.events import EventHandler, PluginEvent
+from bot_squared.event_handler import EventHandler, PluginEvent
 from bot_squared.plugins.plugin import Plugin
 
 _loaded_plugins: Dict[str, Plugin] = {}

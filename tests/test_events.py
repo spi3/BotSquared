@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from bot_squared.events import EventHandler, PluginEvent
+from bot_squared.event_handler import EventHandler, PluginEvent
 
 # Constants for test configuration
 NUM_CONCURRENT_EVENTS = 10
