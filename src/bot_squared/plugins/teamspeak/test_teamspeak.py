@@ -17,6 +17,14 @@ LOGIN_RETRY_ATTEMPTS = 3
 EXTENDED_RETRY_ATTEMPTS = 5
 
 
+@pytest.fixture(autouse=True)
+def mock_event_handler():
+    """Mock the event handler to prevent errors during testing."""
+    with patch("bot_squared.integrator._event_handler") as mock_handler:
+        mock_handler.publish_event.return_value = None
+        yield mock_handler
+
+
 @pytest.fixture
 @patch.object(Teamspeak, "load_config", autospec=True)
 def test_teamspeak(mock_load_config):
@@ -33,13 +41,22 @@ def test_teamspeak(mock_load_config):
         "ts3_server_id": 1,
         "bot_channel_id": 1,
         "iteration_rate_hz": 1,
-        "inactivity_timeout_minutes": 30,
-        "afk_channel_id": 0,
-        "enable_inactivity_monitoring": True,
-        "command_prefix": "!",
-        "commands": {},
-        "new_user_message": "Welcome to the server!",
-        "new_user_inform_group": "Server Admin",
+        "inactivity_monitoring": {
+            "enabled": True,
+            "afk_channel_id": 0,
+            "inactivity_timeout_minutes": 30,
+        },
+        "chat" : {
+            "enabled": True,
+            "command_prefix": "!",
+            "commands": {
+                "TestCommand1": {"response": "TestResponse1"},
+            },
+        },
+        "new_user_alerting": {
+            "new_user_message": "Welcome to the server!",
+            "new_user_inform_group": "Server Admin",
+        },
     }
 
     # Configure the mock to set up the attributes

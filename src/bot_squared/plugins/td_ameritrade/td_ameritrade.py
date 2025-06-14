@@ -7,8 +7,6 @@ from selenium import webdriver
 from tda.auth import easy_client
 from tda.client import Client
 
-from bot_squared.utils.decorators import rate_limit
-
 
 class TDAmeritrade:
     def __init__(self, api_key=None, rate_limit=None):
@@ -26,7 +24,6 @@ class TDAmeritrade:
         # cleanup socket
         del self.tda_api
 
-    @rate_limit
     async def get_yearly_chart(self, symbol, date=None):
         """
         Retrieve yearly chart data for a given symbol.
@@ -52,7 +49,6 @@ class TDAmeritrade:
             self.yearly_charts[symbol] = year_chart_data["candles"]
             return year_chart_data["candles"]
 
-    @rate_limit
     async def get_quote(self, symbol):
         """
         Retrieve quote data for a given symbol.
@@ -63,7 +59,6 @@ class TDAmeritrade:
         quote_data = self.tda_api.get_quote(symbol).json()
         return quote_data[symbol]
 
-    @rate_limit
     async def is_market_open(self):
         """
         Check if the market is currently open.
@@ -95,7 +90,6 @@ class TDAmeritrade:
         else:
             return False
 
-    @rate_limit
     async def get_time_until_market_open(self):
         """
         Calculate the time until the market opens.
@@ -139,7 +133,6 @@ class TDAmeritrade:
             else:
                 date = date + timedelta(days=1)
 
-    @rate_limit
     async def get_time_until_market_close(self):
         """
         Calculate the time until the market closes.

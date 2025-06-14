@@ -443,94 +443,52 @@ class Teamspeak(PluginBase):
             self.logger.debug("Command has no response configured")
 
     def _load_config(self):
-        # Load the default config
-        with open(Path(__file__).resolve().parent / "teamspeak_default_config.yaml") as default_config_file:
-            self.default_config = yaml.safe_load(default_config_file)
-
-        if self.default_config is None:
-            self.logger.error("No default config found")
-            return
-
-        # Load connection retry settings
-        if "initial_retry_delay" in self.config:
-            self.initial_retry_delay = self.config["initial_retry_delay"]
-        else:
-            self.initial_retry_delay = self.default_config.get("initial_retry_delay", 5)
-
-        if "max_retry_delay" in self.config:
-            self.max_retry_delay = self.config["max_retry_delay"]
-        else:
-            self.max_retry_delay = self.default_config.get("max_retry_delay", 60)
-
-        if "retry_backoff_factor" in self.config:
-            self.retry_backoff_factor = self.config["retry_backoff_factor"]
-        else:
-            self.retry_backoff_factor = self.default_config.get("retry_backoff_factor", 2)
-
-        # Load existing config fields
-        if "iteration_rate_hz" in self.config:
-            self.iteration_rate_hz = self.config["iteration_rate_hz"]
-        else:
-            self.iteration_rate_hz = self.default_config["iteration_rate_hz"]
-
-        if "ts3_server_ip" in self.config:
-            self.ts3_server_ip = self.config["ts3_server_ip"]
-        else:
-            self.ts3_server_ip = self.default_config["ts3_server_ip"]
-
-        if "ts3_server_query_username" in self.config:
-            self.ts3_server_query_username = self.config["ts3_server_query_username"]
-        else:
-            self.ts3_server_query_username = self.default_config["ts3_server_query_username"]
-
-        if "ts3_server_query_passwd" in self.config:
-            self.ts3_server_query_passwd = self.config["ts3_server_query_passwd"]
-        else:
-            self.ts3_server_query_passwd = self.default_config["ts3_server_query_passwd"]
-
-        if "ts3_server_id" in self.config:
-            self.ts3_server_id = self.config["ts3_server_id"]
-        else:
-            self.ts3_server_id = self.default_config["ts3_server_id"]
-
-        if "bot_channel_id" in self.config:
-            self.bot_channel_id = self.config["bot_channel_id"]
-        else:
-            self.bot_channel_id = self.default_config["bot_channel_id"]
+        """Load configuration from the config dictionary."""
+        # Load server connection details
+        self.ts3_server_ip = self.config["ts3_server_ip"]
+        self.ts3_server_query_username = self.config["ts3_server_query_username"]
+        self.ts3_server_query_passwd = self.config["ts3_server_query_passwd"]
+        self.ts3_server_id = self.config["ts3_server_id"]
+        self.bot_channel_id = self.config["bot_channel_id"]
+        self.iteration_rate_hz = self.config["iteration_rate_hz"]
 
         # Load inactivity monitoring settings
-        if "inactivity_timeout_minutes" in self.config:
-            self.inactivity_timeout_minutes = self.config["inactivity_timeout_minutes"]
-        else:
-            self.inactivity_timeout_minutes = self.default_config.get("inactivity_timeout_minutes", 30)
+        inactivity_config = self.config.get("inactivity_monitoring", {})
+        self.enable_inactivity_monitoring = inactivity_config.get("enabled", True)
+        self.afk_channel_id = inactivity_config.get("afk_channel_id", 0)
+        self.inactivity_timeout_minutes = inactivity_config.get("inactivity_timeout_minutes", 30)
 
-        if "afk_channel_id" in self.config:
-            self.afk_channel_id = self.config["afk_channel_id"]
-        else:
-            self.afk_channel_id = self.default_config.get("afk_channel_id", 0)
+        # Load chat settings
+        chat_config = self.config.get("chat", {})
+        self.chat_enabled = chat_config.get("enabled", True)
+        self.command_prefix = chat_config.get("command_prefix", "!")
+        self.commands = chat_config.get("commands", {})
 
-        if "enable_inactivity_monitoring" in self.config:
-            self.enable_inactivity_monitoring = self.config["enable_inactivity_monitoring"]
-        else:
-            self.enable_inactivity_monitoring = self.default_config.get("enable_inactivity_monitoring", True)
+        # Load new user alerting settings
+        new_user_config = self.config.get("new_user_alerting", {})
+        self.new_user_message = new_user_config.get("new_user_message", "Welcome to the server!")
+        self.new_user_inform_group = new_user_config.get("new_user_inform_group", "Server Admin")
 
-        if "commands" in self.config:
-            self.commands = self.config["commands"]
-        else:
-            self.commands = self.default_config["commands"]
+    def load_config(self):
+        """Public method to load configuration."""
+        return self._load_config()
 
-        if "command_prefix" in self.config:
-            self.command_prefix = self.config["command_prefix"]
-        else:
-            self.command_prefix = self.default_config["command_prefix"]
+    def process_event(self, event):
+        """Public method to process events."""
+        return self._process_event(event)
 
-        # Load new user settings
-        if "new_user_message" in self.config:
-            self.new_user_message = self.config["new_user_message"]
-        else:
-            self.new_user_message = self.default_config.get("new_user_message", "Welcome!")
+    def process_join_event(self, event):
+        """Public method to process join events."""
+        return self._process_join_event(event)
 
-        if "new_user_inform_group" in self.config:
-            self.new_user_inform_group = self.config["new_user_inform_group"]
-        else:
-            self.new_user_inform_group = self.default_config.get("new_user_inform_group", "Server Admin")
+    def process_msg_event(self, event):
+        """Public method to process message events."""
+        return self._process_msg_event(event)
+
+    def update_user_activity(self, client_id: str):
+        """Public method to update user activity."""
+        return self._update_user_activity(client_id)
+
+    def check_inactive_users(self):
+        """Public method to check inactive users."""
+        return self._check_inactive_users()

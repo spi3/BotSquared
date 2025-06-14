@@ -38,6 +38,16 @@ def mock_server_info():
     return info
 
 
+@pytest.fixture(autouse=True)
+def mock_plugin_event():
+    """Mock the plugin_event decorator to do nothing."""
+    with patch("bot_squared.plugins.steam.steam.plugin_event") as mock_decorator, \
+         patch("bot_squared.integrator._event_handler") as mock_event_handler:
+        mock_decorator.side_effect = lambda func: func
+        mock_event_handler.publish_event.return_value = None
+        yield mock_decorator
+
+
 def test_successful_initialization(valid_config):
     """Test successful plugin initialization with valid config."""
     plugin = Steam("test_plugin", valid_config)

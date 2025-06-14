@@ -14,28 +14,32 @@ def tdameritrade():
         return td
 
 
-def test_get_yearly_chart_cached(tdameritrade):
+@pytest.mark.asyncio
+async def test_get_yearly_chart_cached(tdameritrade):
     tdameritrade.yearly_charts["AAPL"] = [{"close": 100}]
-    result = tdameritrade.get_yearly_chart("AAPL")
+    result = await tdameritrade.get_yearly_chart("AAPL")
     assert result == [{"close": 100}]
 
 
+@pytest.mark.asyncio
 @patch("bot_squared.plugins.td_ameritrade.td_ameritrade.Client")
-def test_get_yearly_chart_api(mock_client, tdameritrade):
+async def test_get_yearly_chart_api(mock_client, tdameritrade):
     mock_api = tdameritrade.tda_api
     mock_api.get_price_history.return_value.json.return_value = {"candles": [{"close": 200}]}
-    result = tdameritrade.get_yearly_chart("GOOG")
+    result = await tdameritrade.get_yearly_chart("GOOG")
     assert result == [{"close": 200}]
     assert tdameritrade.yearly_charts["GOOG"] == [{"close": 200}]
 
 
-def test_get_quote(tdameritrade):
+@pytest.mark.asyncio
+async def test_get_quote(tdameritrade):
     tdameritrade.tda_api.get_quote.return_value.json.return_value = {"AAPL": {"price": 150}}
-    result = tdameritrade.get_quote("AAPL")
+    result = await tdameritrade.get_quote("AAPL")
     assert result == {"price": 150}
 
 
-def test_is_market_open_true(tdameritrade):
+@pytest.mark.asyncio
+async def test_is_market_open_true(tdameritrade):
     tdameritrade.tda_api.get_hours_for_single_market.return_value.json.return_value = {
         "equity": {
             "EQ": {
@@ -50,11 +54,12 @@ def test_is_market_open_true(tdameritrade):
     with patch("bot_squared.plugins.td_ameritrade.td_ameritrade.datetime") as mock_datetime:
         mock_datetime.now.return_value = datetime(2023, 1, 1, 15, 0, tzinfo=timezone.utc)
         mock_datetime.strptime.side_effect = lambda *a, **k: datetime.strptime(*a, **k).replace(tzinfo=timezone.utc)
-        result = tdameritrade.is_market_open()
+        result = await tdameritrade.is_market_open()
         assert result is True
 
 
-def test_is_market_open_false(tdameritrade):
+@pytest.mark.asyncio
+async def test_is_market_open_false(tdameritrade):
     tdameritrade.tda_api.get_hours_for_single_market.return_value.json.return_value = {
         "equity": {
             "EQ": {
@@ -66,5 +71,5 @@ def test_is_market_open_false(tdameritrade):
             }
         }
     }
-    result = tdameritrade.is_market_open()
+    result = await tdameritrade.is_market_open()
     assert result is False
