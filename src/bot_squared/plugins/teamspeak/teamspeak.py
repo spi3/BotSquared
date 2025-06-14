@@ -45,7 +45,7 @@ class Teamspeak(PluginBase):
 
         self.logger.info("Teamspeak initializing...")
 
-        self.load_config()
+        self._load_config()
         self.logger.debug(
             f"TeamSpeak plugin initialized with: iteration_rate={self.iteration_rate_hz}, "
             f"server={self.ts3_server_ip}, username={self.ts3_server_query_username}, "
@@ -121,9 +121,11 @@ class Teamspeak(PluginBase):
             self.logger.error(f"Failed to send message to {to}: {e}")
             self.logger.debug(f"Full error details for failed message: {e!s}")
 
+    @plugin_event
     def receive_message(self):
         pass
 
+    @plugin_event
     def set_channel_name(self, channel_id: int, name: str) -> None:
         self.logger.debug(f"Attempting to update channel {channel_id} name to: {name}")
         try:
@@ -136,7 +138,7 @@ class Teamspeak(PluginBase):
             self.logger.error(f"Invalid template variable in channel {channel_id}: {e}")
             self.logger.debug(f"Template error details: {e!s}")
 
-    def update_user_activity(self, client_id: str):
+    def _update_user_activity(self, client_id: str):
         """Update the last activity timestamp for a user.
 
         Args:
@@ -147,7 +149,7 @@ class Teamspeak(PluginBase):
         self.user_activity_timestamps[client_id] = current_time
         self.logger.debug(f"Updated activity for client {client_id}: previous={previous_time}, new={current_time}")
 
-    def check_inactive_users(self):
+    def _check_inactive_users(self):
         """Check for inactive users and move them to the AFK channel if needed."""
         if not self.enable_inactivity_monitoring:
             self.logger.debug("Inactivity monitoring is disabled, skipping check")
@@ -182,7 +184,7 @@ class Teamspeak(PluginBase):
                 # If user not in activity tracking, add them with current time
                 if client_id not in self.user_activity_timestamps:
                     self.logger.debug(f"New client {client_id} detected, initializing activity timestamp")
-                    self.update_user_activity(client_id)
+                    self._update_user_activity(client_id)
                     continue
 
                 # Check if user has been inactive
@@ -243,7 +245,7 @@ class Teamspeak(PluginBase):
                     # Check for inactive users every minute
                     current_time = time.time()
                     if current_time - last_inactivity_check >= INACTIVITY_CHECK_INTERVAL:
-                        self.check_inactive_users()
+                        self._check_inactive_users()
                         last_inactivity_check = current_time
 
                     try:
@@ -255,7 +257,7 @@ class Teamspeak(PluginBase):
                         self.logger.debug(f"{events}")
                         for event in events:
                             self.logger.debug(f"{self.plugin_name} - Event: {event}")
-                            self.process_event(event)
+                            self._process_event(event)
 
                     except ts3.query.TS3TimeoutError:
                         timeouts += 1
@@ -268,13 +270,13 @@ class Teamspeak(PluginBase):
                 time.sleep(self.initial_retry_delay)  # Wait before attempting to reconnect
                 continue  # Restart from the beginning of the outer loop
 
-    def process_event(self, event):
+    def _process_event(self, event):
         self.logger.debug(f"Processing event: {event}")
 
         # Update user activity on any event that indicates user interaction
         if "invokerid" in event:
             self.logger.debug(f"Updating activity for invoker {event['invokerid']}")
-            self.update_user_activity(event["invokerid"])
+            self._update_user_activity(event["invokerid"])
 
         # Handle channel change events to update activity
         if "cfid" in event and "clid" in event:
@@ -282,7 +284,7 @@ class Teamspeak(PluginBase):
                 f"Channel change event detected for client {event['clid']}: "
                 f"from={event['cfid']}, to={event.get('ctid', 'unknown')}"
             )
-            self.update_user_activity(event["clid"])
+            self._update_user_activity(event["clid"])
 
         # Ignore events from the plugin
         if "invokername" in event and event["invokername"] == self.ts3_server_query_username:
@@ -291,14 +293,14 @@ class Teamspeak(PluginBase):
 
         if "msg" in event:
             self.logger.debug(f"Processing message event: {event['msg']}")
-            self.process_msg_event(event)
+            self._process_msg_event(event)
         elif "cfid" in event:
             self.logger.debug("Processing join event")
-            self.process_join_event(event)
+            self._process_join_event(event)
         else:
             self.logger.debug(f"Unhandled event type: {event}")
 
-    def process_join_event(self, event):
+    def _process_join_event(self, event):
         """Process a user join event.
 
         This method:
@@ -375,7 +377,7 @@ class Teamspeak(PluginBase):
                         self.logger.debug(f"Full error details for admin group notification: {e!s}")
                     return
 
-    def process_msg_event(self, event):
+    def _process_msg_event(self, event):
         msg = event["msg"]
         self.logger.debug(f"Processing message event: {msg}")
 
@@ -403,7 +405,7 @@ class Teamspeak(PluginBase):
         else:
             self.logger.debug("Command has no response configured")
 
-    def load_config(self):
+    def _load_config(self):
         # Load the default config
         with open(Path(__file__).resolve().parent / "teamspeak_default_config.yaml") as default_config_file:
             self.default_config = yaml.safe_load(default_config_file)

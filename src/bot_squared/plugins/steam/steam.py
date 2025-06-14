@@ -4,11 +4,6 @@ Steam Plugin Module for Bot Squared
 This module provides functionality to monitor and query Steam game servers using the A2S protocol.
 It implements a plugin that periodically checks the status of a specified Steam game server,
 including player count and server availability.
-
-Dependencies:
-    - python-a2s: For querying Steam game servers using the A2S protocol
-    - bot_squared.integrator: For plugin event handling
-    - bot_squared.plugins.plugin_base: Base plugin functionality
 """
 
 import logging

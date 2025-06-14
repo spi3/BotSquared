@@ -18,9 +18,9 @@
             <h3>{{ plugin.name }}</h3>
             <p>{{ plugin.description | truncate(150) if plugin.description else 'No description available.' }}</p>
             <div style="margin-top: 1rem;">
-                {% if plugin.integration_methods %}
+                {% if plugin.plugin_events %}
                 <span class="badge" style="background-color: var(--primary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em; margin-right: 0.5rem;">
-                    {{ plugin.integration_methods | length }} Method{{ 's' if plugin.integration_methods | length != 1 }}
+                    {{ plugin.plugin_events | length }} Method{{ 's' if plugin.plugin_events | length != 1 }}
                 </span>
                 {% endif %}
                 {% if plugin.configuration %}

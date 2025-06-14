@@ -41,7 +41,7 @@ class PluginDocExtractor:
             "name": plugin_name,
             "description": self._extract_plugin_description(plugin_path),
             "configuration": self.extract_configuration(plugin_name),
-            "integration_methods": self.extract_integration_methods(plugin_name),
+            "plugin_events": self.extract_plugin_events(plugin_name),
             "examples": self._extract_examples(plugin_path),
             "dependencies": self._extract_dependencies(plugin_path),
         }
@@ -77,8 +77,8 @@ class PluginDocExtractor:
 
         return config_options
 
-    def extract_integration_methods(self, plugin_name: str) -> List[Dict[str, Any]]:
-        """Extract integration methods and their arguments from a plugin.
+    def extract_plugin_events(self, plugin_name: str) -> List[Dict[str, Any]]:
+        """Extract plugin events and their arguments from a plugin.
 
         Args:
             plugin_name: Name of the plugin to extract methods from

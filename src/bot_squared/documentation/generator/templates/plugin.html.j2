@@ -42,17 +42,62 @@
 </div>
 {% endif %}
 
-{% if plugin.integration_methods %}
+{% set plugin_events = plugin.plugin_events | selectattr('is_plugin_event', 'true') | list %}
+{% set public_methods = plugin.plugin_events | selectattr('is_plugin_event', 'false') | list %}
+
+{% if plugin_events %}
 <div class="card">
-    <h2>Integration Methods</h2>
-    {% for method in plugin.integration_methods %}
+    <h2>Plugin Events</h2>
+    <p class="section-description">Methods that are triggered by the bot system in response to specific events.</p>
+    {% for method in plugin_events %}
     <div class="method">
         <h3><code>{{ method.name }}</code></h3>
-        {% if method.is_plugin_event %}
         <span class="badge" style="background-color: var(--accent-color); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8em; margin-left: 0.5rem;">
             Plugin Event
         </span>
+        <p>{{ method.description }}</p>
+        {% if method.long_description %}
+        <p>{{ method.long_description }}</p>
         {% endif %}
+
+        {% if method.arguments %}
+        <h4>Arguments</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for arg in method.arguments %}
+                <tr>
+                    <td><code>{{ arg.name }}</code></td>
+                    <td><code>{{ arg.type if arg.type else 'Any' }}</code></td>
+                    <td>{{ arg.description if arg.description else 'No description available.' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if method.returns %}
+        <h4>Returns</h4>
+        <p><code>{{ method.returns.type if method.returns.type else 'None' }}</code>: {{ method.returns.description if method.returns.description else 'No description available.' }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if public_methods %}
+<div class="card">
+    <h2>Public Methods</h2>
+    <p class="section-description">Methods that can be called by plugin events or other plugins.</p>
+    {% for method in public_methods %}
+    <div class="method">
+        <h3><code>{{ method.name }}</code></h3>
         <p>{{ method.description }}</p>
         {% if method.long_description %}
         <p>{{ method.long_description }}</p>

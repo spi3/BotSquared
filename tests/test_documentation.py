@@ -88,8 +88,8 @@ def test_plugin_doc_extractor(temp_plugin_dir):
     assert plugin_info["configuration"][0]["default"] == "'default'"
 
     # Test method extraction
-    assert len(plugin_info["integration_methods"]) == 1
-    method = plugin_info["integration_methods"][0]
+    assert len(plugin_info["plugin_events"]) == 1
+    method = plugin_info["plugin_events"][0]
     assert method["name"] == "test_method"
     assert len(method["arguments"]) == NUM_METHOD_ARGS
     assert method["returns"]["type"] == "bool"
