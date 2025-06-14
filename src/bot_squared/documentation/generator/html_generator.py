@@ -36,6 +36,11 @@ class DocumentationGenerator:
         # Set up Jinja environment
         self.jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(str(self.template_dir)), autoescape=True)
 
+        # Add custom tests
+        def is_public_method(method: Dict[str, Any]) -> bool:
+            return not method['name'].startswith('_')
+        self.jinja_env.tests['public_method'] = is_public_method
+
         # Set up markdown converter
         self.markdown = markdown2.Markdown(extras=["fenced-code-blocks", "tables"])
 

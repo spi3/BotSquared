@@ -43,7 +43,7 @@
 {% endif %}
 
 {% set plugin_events = plugin.plugin_events | selectattr('is_plugin_event', 'true') | list %}
-{% set public_methods = plugin.plugin_events | selectattr('is_plugin_event', 'false') | list %}
+{% set public_methods = plugin.plugin_events | selectattr('public_method') | list %}
 
 {% if plugin_events %}
 <div class="card">
