@@ -17,7 +17,15 @@ INACTIVITY_CHECK_INTERVAL: int = 60  # seconds
 
 
 class Teamspeak(PluginBase):
-    """Teamspeak plugin"""
+    """TeamSpeak plugin for bot_squared.
+    
+    This plugin provides integration with TeamSpeak servers, allowing the bot to:
+    - Send and receive messages
+    - Monitor user activity
+    - Manage channel names
+    - Handle user joins and notifications
+    - Move inactive users to AFK channel
+    """
 
     def __init__(self, plugin_name: str, config: dict):
         super().__init__()
@@ -123,10 +131,20 @@ class Teamspeak(PluginBase):
 
     @plugin_event
     def receive_message(self):
+        """Handle incoming messages from TeamSpeak.
+        
+        This method is called when a message is received from any TeamSpeak client.
+        """
         pass
 
     @plugin_event
     def set_channel_name(self, channel_id: int, name: str) -> None:
+        """Set the name of a TeamSpeak channel.
+        
+        Args:
+            channel_id (int): The ID of the channel to rename
+            name (str): The new name for the channel
+        """
         self.logger.debug(f"Attempting to update channel {channel_id} name to: {name}")
         try:
             self.ts3conn.channeledit(cid=channel_id, channel_name=name)
@@ -218,6 +236,15 @@ class Teamspeak(PluginBase):
             self.logger.debug(f"Full error details for inactive user check: {e!s}")
 
     def run(self):
+        """Main plugin execution loop.
+        
+        This method runs continuously, handling TeamSpeak events and maintaining
+        the connection to the server. It:
+        - Maintains the connection to the TeamSpeak server
+        - Handles incoming events
+        - Monitors user activity
+        - Manages AFK status
+        """
         while True:  # Outer loop for continuous operation
             try:
                 # Connect to the server with retry mechanism
