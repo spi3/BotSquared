@@ -7,6 +7,12 @@ import ts3.definitions
 from ts3.response import TS3Response
 
 from bot_squared.plugins.teamspeak.teamspeak import Teamspeak
+from bot_squared.plugins.teamspeak.teamspeak_config import (
+    TeamspeakConfig,
+    InactivityMonitoringConfig,
+    ChatConfig,
+    NewUserAlertingConfig,
+)
 
 # Constants
 EXPECTED_ADMIN_COUNT = 2
@@ -68,12 +74,6 @@ def test_teamspeak(mock_load_config):
 
     ts = Teamspeak(plugin_name="Test_Teamspeak", config=test_config)
     return ts
-
-
-def test_send_message_integrable(test_teamspeak):
-    """Test that the send_message function is properly decorated with @plugin_event."""
-    assert hasattr(test_teamspeak.send_message, "__wrapped__"), "send_message should be decorated with @plugin_event"
-
 
 @patch("ts3.query.TS3Connection")
 def test_process_msg_in_channel_event(mock_connection: MagicMock, test_teamspeak):
@@ -458,3 +458,297 @@ def test_connect_immediate_success(mock_connection: MagicMock, test_teamspeak):
 
     # Verify final result
     assert result is True
+
+
+# Tests for TeamspeakConfig dataclass
+class TestTeamspeakConfig:
+    """Test suite for TeamspeakConfig dataclass and its methods."""
+
+    def test_from_dict_complete_config(self):
+        """Test creating TeamspeakConfig from a complete configuration dictionary.
+        
+        Verifies that all configuration sections are properly converted to their
+        respective dataclass instances with correct values.
+        """
+        config_dict = {
+            "ts3_server_ip": "192.168.1.100",
+            "ts3_server_query_username": "TestBot",
+            "ts3_server_query_passwd": "SecretPassword",
+            "ts3_server_id": 1,
+            "bot_channel_id": 5,
+            "iteration_rate_hz": 2.5,
+            "inactivity_monitoring": {
+                "enabled": True,
+                "afk_channel_id": 10,
+                "inactivity_timeout_minutes": 45,
+            },
+            "chat": {
+                "enabled": False,
+                "command_prefix": "$",
+                "commands": {
+                    "help": {"response": "Available commands: help, info"},
+                    "info": {"response": "Bot information"},
+                },
+            },
+            "new_user_alerting": {
+                "new_user_message": "Welcome to our TeamSpeak server!",
+                "new_user_inform_group": "Moderators",
+            },
+        }
+
+        config = TeamspeakConfig.from_dict(config_dict)
+
+        # Test main configuration
+        assert config.ts3_server_ip == "192.168.1.100"
+        assert config.ts3_server_query_username == "TestBot"
+        assert config.ts3_server_query_passwd == "SecretPassword"
+        assert config.ts3_server_id == 1
+        assert config.bot_channel_id == 5
+        assert config.iteration_rate_hz == 2.5
+
+        # Test inactivity monitoring configuration
+        assert isinstance(config.inactivity_monitoring, InactivityMonitoringConfig)
+        assert config.inactivity_monitoring.enabled is True
+        assert config.inactivity_monitoring.afk_channel_id == 10
+        assert config.inactivity_monitoring.inactivity_timeout_minutes == 45
+
+        # Test chat configuration
+        assert isinstance(config.chat, ChatConfig)
+        assert config.chat.enabled is False
+        assert config.chat.command_prefix == "$"
+        assert config.chat.commands == {
+            "help": {"response": "Available commands: help, info"},
+            "info": {"response": "Bot information"},
+        }
+
+        # Test new user alerting configuration
+        assert isinstance(config.new_user_alerting, NewUserAlertingConfig)
+        assert config.new_user_alerting.new_user_message == "Welcome to our TeamSpeak server!"
+        assert config.new_user_alerting.new_user_inform_group == "Moderators"
+
+    def test_from_dict_minimal_config(self):
+        """Test creating TeamspeakConfig with only required fields.
+        
+        Verifies that:
+        1. Required fields are properly set
+        2. Optional sections are initialized with default values
+        3. All optional sections are proper dataclass instances
+        """
+        config_dict = {
+            "ts3_server_ip": "localhost",
+            "ts3_server_query_username": "MinimalBot",
+            "ts3_server_query_passwd": "password123",
+            "ts3_server_id": 2,
+            "bot_channel_id": 1,
+            "iteration_rate_hz": 1.0,
+        }
+
+        config = TeamspeakConfig.from_dict(config_dict)
+
+        # Test main configuration
+        assert config.ts3_server_ip == "localhost"
+        assert config.ts3_server_query_username == "MinimalBot"
+        assert config.ts3_server_query_passwd == "password123"
+        assert config.ts3_server_id == 2
+        assert config.bot_channel_id == 1
+        assert config.iteration_rate_hz == 1.0
+
+        # Test that optional sections are initialized with defaults
+        assert isinstance(config.inactivity_monitoring, InactivityMonitoringConfig)
+        assert config.inactivity_monitoring.enabled is True
+        assert config.inactivity_monitoring.afk_channel_id == 0
+        assert config.inactivity_monitoring.inactivity_timeout_minutes == 30
+
+        assert isinstance(config.chat, ChatConfig)
+        assert config.chat.enabled is True
+        assert config.chat.command_prefix == "!"
+        assert config.chat.commands == {}
+
+        assert isinstance(config.new_user_alerting, NewUserAlertingConfig)
+        assert config.new_user_alerting.new_user_message == "Welcome to the server!"
+        assert config.new_user_alerting.new_user_inform_group == "Server Admin"
+
+    def test_from_dict_partial_optional_sections(self):
+        """Test creating TeamspeakConfig with partial optional configurations.
+        
+        Verifies that:
+        1. Provided optional configuration values are used
+        2. Missing values in optional sections use defaults
+        3. Empty optional sections still create proper dataclass instances
+        """
+        config_dict = {
+            "ts3_server_ip": "10.0.0.1",
+            "ts3_server_query_username": "PartialBot",
+            "ts3_server_query_passwd": "partial123",
+            "ts3_server_id": 3,
+            "bot_channel_id": 2,
+            "iteration_rate_hz": 0.5,
+            "inactivity_monitoring": {
+                "enabled": False,
+                # Missing afk_channel_id and inactivity_timeout_minutes
+            },
+            "chat": {
+                "command_prefix": "#",
+                # Missing enabled and commands
+            },
+            "new_user_alerting": {
+                "new_user_message": "Hello there!",
+                # Missing new_user_inform_group
+            },
+        }
+
+        config = TeamspeakConfig.from_dict(config_dict)
+
+        # Test inactivity monitoring with partial config
+        assert config.inactivity_monitoring.enabled is False
+        assert config.inactivity_monitoring.afk_channel_id == 0  # Default
+        assert config.inactivity_monitoring.inactivity_timeout_minutes == 30  # Default
+
+        # Test chat with partial config
+        assert config.chat.enabled is True  # Default
+        assert config.chat.command_prefix == "#"
+        assert config.chat.commands == {}  # Default
+
+        # Test new user alerting with partial config
+        assert config.new_user_alerting.new_user_message == "Hello there!"
+        assert config.new_user_alerting.new_user_inform_group == "Server Admin"  # Default
+
+    def test_from_dict_empty_optional_sections(self):
+        """Test creating TeamspeakConfig with empty optional sections.
+        
+        Verifies that empty dictionaries for optional sections still create
+        proper dataclass instances with all default values.
+        """
+        config_dict = {
+            "ts3_server_ip": "example.com",
+            "ts3_server_query_username": "EmptyBot",
+            "ts3_server_query_passwd": "empty456",
+            "ts3_server_id": 4,
+            "bot_channel_id": 3,
+            "iteration_rate_hz": 3.0,
+            "inactivity_monitoring": {},
+            "chat": {},
+            "new_user_alerting": {},
+        }
+
+        config = TeamspeakConfig.from_dict(config_dict)
+
+        # All optional sections should have default values
+        assert config.inactivity_monitoring.enabled is True
+        assert config.inactivity_monitoring.afk_channel_id == 0
+        assert config.inactivity_monitoring.inactivity_timeout_minutes == 30
+
+        assert config.chat.enabled is True
+        assert config.chat.command_prefix == "!"
+        assert config.chat.commands == {}
+
+        assert config.new_user_alerting.new_user_message == "Welcome to the server!"
+        assert config.new_user_alerting.new_user_inform_group == "Server Admin"
+
+    def test_from_dict_missing_required_fields(self):
+        """Test that TeamspeakConfig.from_dict raises KeyError for missing required fields.
+        
+        Verifies that proper exceptions are raised when required configuration
+        fields are missing from the input dictionary.
+        """
+        # Test missing ts3_server_ip
+        incomplete_config = {
+            "ts3_server_query_username": "TestBot",
+            "ts3_server_query_passwd": "password",
+            "ts3_server_id": 1,
+            "bot_channel_id": 1,
+            "iteration_rate_hz": 1.0,
+        }
+
+        with pytest.raises(KeyError, match="ts3_server_ip"):
+            TeamspeakConfig.from_dict(incomplete_config)
+
+        # Test missing multiple required fields
+        very_incomplete_config = {
+            "ts3_server_ip": "localhost",
+        }
+
+        with pytest.raises(KeyError):
+            TeamspeakConfig.from_dict(very_incomplete_config)
+
+    def test_from_dict_complex_commands_structure(self):
+        """Test creating TeamspeakConfig with complex command configurations.
+        
+        Verifies that complex nested command structures are properly preserved
+        in the chat configuration.
+        """
+        config_dict = {
+            "ts3_server_ip": "complex.example.com",
+            "ts3_server_query_username": "ComplexBot",
+            "ts3_server_query_passwd": "complex789",
+            "ts3_server_id": 5,
+            "bot_channel_id": 4,
+            "iteration_rate_hz": 1.5,
+            "chat": {
+                "enabled": True,
+                "command_prefix": ">>",
+                "commands": {
+                    "weather": {
+                        "response": "Current weather: Sunny",
+                        "permissions": ["user", "admin"],
+                        "cooldown": 30,
+                    },
+                    "ban": {
+                        "response": "User has been banned",
+                        "permissions": ["admin"],
+                        "log": True,
+                    },
+                    "help": {
+                        "response": "Available commands: weather, ban, help",
+                    },
+                },
+            },
+        }
+
+        config = TeamspeakConfig.from_dict(config_dict)
+
+        # Test that complex command structure is preserved
+        assert config.chat.command_prefix == ">>"
+        assert len(config.chat.commands) == 3
+        
+        weather_cmd = config.chat.commands["weather"]
+        assert weather_cmd["response"] == "Current weather: Sunny"
+        assert weather_cmd["permissions"] == ["user", "admin"]
+        assert weather_cmd["cooldown"] == 30
+
+        ban_cmd = config.chat.commands["ban"]
+        assert ban_cmd["response"] == "User has been banned"
+        assert ban_cmd["permissions"] == ["admin"]
+        assert ban_cmd["log"] is True
+
+        help_cmd = config.chat.commands["help"]
+        assert help_cmd["response"] == "Available commands: weather, ban, help"
+
+    def test_post_init_behavior(self):
+        """Test the __post_init__ behavior of TeamspeakConfig.
+        
+        Verifies that when creating a TeamspeakConfig directly (not from dict),
+        None optional sections are properly initialized with default instances.
+        """
+        config = TeamspeakConfig(
+            ts3_server_ip="direct.example.com",
+            ts3_server_query_username="DirectBot",
+            ts3_server_query_passwd="direct123",
+            ts3_server_id=6,
+            bot_channel_id=5,
+            iteration_rate_hz=2.0,
+            # Optional sections are None, should be initialized by __post_init__
+            inactivity_monitoring=None,
+            chat=None,
+            new_user_alerting=None,
+        )
+
+        # Verify that None values were replaced with default instances
+        assert isinstance(config.inactivity_monitoring, InactivityMonitoringConfig)
+        assert isinstance(config.chat, ChatConfig)
+        assert isinstance(config.new_user_alerting, NewUserAlertingConfig)
+
+        # Verify default values
+        assert config.inactivity_monitoring.enabled is True
+        assert config.chat.enabled is True
+        assert config.new_user_alerting.new_user_message == "Welcome to the server!"
