@@ -120,10 +120,6 @@ omit = [
   "src/bot_squared/__about__.py",
 ]
 
-[tool.coverage.paths]
-bot_squared = ["src/bot_squared"]
-tests = ["tests", "src/bot_squared/plugins/*/test_*"]
-
 [tool.coverage.report]
 exclude_lines = [
   "no cov",
