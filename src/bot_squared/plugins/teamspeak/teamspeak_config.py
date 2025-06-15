@@ -5,7 +5,7 @@ from typing import Dict, Optional
 @dataclass
 class InactivityMonitoringConfig:
     """Configuration for inactivity monitoring settings."""
-    enabled: bool = True
+    enabled: bool = False
     afk_channel_id: int = 0
     inactivity_timeout_minutes: int = 30
 
@@ -13,7 +13,7 @@ class InactivityMonitoringConfig:
 @dataclass
 class ChatConfig:
     """Configuration for chat functionality."""
-    enabled: bool = True
+    enabled: bool = False
     command_prefix: str = "!"
     commands: Dict[str, Dict] = None
 
@@ -25,6 +25,7 @@ class ChatConfig:
 @dataclass
 class NewUserAlertingConfig:
     """Configuration for new user alerting settings."""
+    enabled: bool = False
     new_user_message: str = "Welcome to the server!"
     new_user_inform_group: str = "Server Admin"
 
@@ -43,6 +44,11 @@ class TeamspeakConfig:
     ts3_server_id: int
     bot_channel_id: int
     iteration_rate_hz: float
+
+    # Connection retry settings
+    initial_retry_delay: int = 5
+    max_retry_delay: int = 60
+    retry_backoff_factor: int = 2
     
     # Optional configuration sections
     inactivity_monitoring: Optional[InactivityMonitoringConfig] = None
@@ -84,7 +90,7 @@ class TeamspeakConfig:
         inactivity_config = config_dict.get('inactivity_monitoring', {})
         if inactivity_config:
             main_config['inactivity_monitoring'] = InactivityMonitoringConfig(
-                enabled=inactivity_config.get('enabled', True),
+                enabled=inactivity_config.get('enabled', False),
                 afk_channel_id=inactivity_config.get('afk_channel_id', 0),
                 inactivity_timeout_minutes=inactivity_config.get('inactivity_timeout_minutes', 30)
             )
@@ -92,7 +98,7 @@ class TeamspeakConfig:
         chat_config = config_dict.get('chat', {})
         if chat_config:
             main_config['chat'] = ChatConfig(
-                enabled=chat_config.get('enabled', True),
+                enabled=chat_config.get('enabled', False),
                 command_prefix=chat_config.get('command_prefix', '!'),
                 commands=chat_config.get('commands', {})
             )
@@ -100,6 +106,7 @@ class TeamspeakConfig:
         new_user_config = config_dict.get('new_user_alerting', {})
         if new_user_config:
             main_config['new_user_alerting'] = NewUserAlertingConfig(
+                enabled=new_user_config.get('enabled', False),
                 new_user_message=new_user_config.get('new_user_message', 'Welcome to the server!'),
                 new_user_inform_group=new_user_config.get('new_user_inform_group', 'Server Admin')
             )

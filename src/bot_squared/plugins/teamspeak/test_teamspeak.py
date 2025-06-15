@@ -68,14 +68,15 @@ def test_teamspeak():
     return ts
 
 @patch("ts3.query.TS3Connection")
-def test_process_msg_in_channel_event(mock_connection: MagicMock, test_teamspeak):
+def test_process_msg_in_channel_event(mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test processing of channel message events.
 
     Verifies that when a command message is received in a channel,
     the bot responds with the correct response in the same channel.
     """
-    test_teamspeak.command_prefix = "$"
-    test_teamspeak.commands = {
+    test_teamspeak.config.chat.enabled = True
+    test_teamspeak.config.chat.command_prefix = "$"
+    test_teamspeak.config.chat.commands = {
         "TestCommand1": {"response": "TestResponse1"},
         "TestCommand2": {"response": "TestResponse2"},
     }
@@ -91,12 +92,12 @@ def test_process_msg_in_channel_event(mock_connection: MagicMock, test_teamspeak
 
     test_teamspeak._process_msg_event(event)
     mock_connection.sendtextmessage.assert_called_with(
-        msg="TestResponse1", targetmode=ts3.definitions.TextMessageTargetMode.CHANNEL, target=test_teamspeak.bot_channel_id
+        msg="TestResponse1", targetmode=ts3.definitions.TextMessageTargetMode.CHANNEL, target=test_teamspeak.config.bot_channel_id
     )
 
 
 @patch("ts3.query.TS3Connection")
-def test_process_new_user_join_event(mock_connection: MagicMock, test_teamspeak):
+def test_process_new_user_join_event(mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test basic processing of new user join events.
 
     Verifies that when a new user joins without special conditions,
@@ -111,7 +112,7 @@ def test_process_new_user_join_event(mock_connection: MagicMock, test_teamspeak)
 
 
 @patch("ts3.query.TS3Connection")
-def test_update_user_activity(mock_connection: MagicMock, test_teamspeak):
+def test_update_user_activity(mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test user activity timestamp updates.
 
     Verifies that:
@@ -132,7 +133,7 @@ def test_update_user_activity(mock_connection: MagicMock, test_teamspeak):
 
 
 @patch("ts3.query.TS3Connection")
-def test_check_inactive_users(mock_connection: MagicMock, test_teamspeak):
+def test_check_inactive_users(mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test the inactive user checking mechanism.
 
     Verifies that:
@@ -143,8 +144,8 @@ def test_check_inactive_users(mock_connection: MagicMock, test_teamspeak):
     5. Moved users receive an inactivity notification
     """
     test_teamspeak.ts3conn = mock_connection
-    test_teamspeak.afk_channel_id = 10
-    test_teamspeak.inactivity_timeout_minutes = 30
+    test_teamspeak.config.inactivity_monitoring.afk_channel_id = 10
+    test_teamspeak.config.inactivity_monitoring.inactivity_timeout_minutes = 30
 
     # Mock client list response
     mock_connection.clientlist.return_value = [
@@ -164,7 +165,7 @@ def test_check_inactive_users(mock_connection: MagicMock, test_teamspeak):
     }
 
     # Run the check
-    test_teamspeak._check_inactive_users()
+    test_teamspeak._handle_inactivity_monitoring()
 
     # Verify that only the inactive user was moved
     mock_connection.clientmove.assert_called_once_with(cid=10, clid="2")
@@ -177,17 +178,17 @@ def test_check_inactive_users(mock_connection: MagicMock, test_teamspeak):
 
 
 @patch("ts3.query.TS3Connection")
-def test_inactivity_monitoring_disabled(mock_connection: MagicMock, test_teamspeak):
+def test_inactivity_monitoring_disabled(mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test that when inactivity monitoring is disabled, no actions are taken.
 
     Verifies that no client list is fetched and no users are moved or notified
     when the inactivity monitoring feature is disabled.
     """
     test_teamspeak.ts3conn = mock_connection
-    test_teamspeak.enable_inactivity_monitoring = False
+    test_teamspeak.config.inactivity_monitoring.enabled = False
 
     # Run the check
-    test_teamspeak._check_inactive_users()
+    test_teamspeak._handle_inactivity_monitoring()
 
     # Verify that no actions were taken
     mock_connection.clientlist.assert_not_called()
@@ -196,7 +197,7 @@ def test_inactivity_monitoring_disabled(mock_connection: MagicMock, test_teamspe
 
 
 @patch("ts3.query.TS3Connection")
-def test_process_event_updates_activity(mock_connection: MagicMock, test_teamspeak):
+def test_process_event_updates_activity(mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test that user activity is updated for various event types.
 
     Verifies that user activity timestamps are updated when:
@@ -225,7 +226,7 @@ def test_process_event_updates_activity(mock_connection: MagicMock, test_teamspe
 
 
 @patch("ts3.query.TS3Connection")
-def test_process_new_user_join_event_with_notifications(mock_connection: MagicMock, test_teamspeak):
+def test_process_new_user_join_event_with_notifications(mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test the full new user join event processing with notifications.
 
     Verifies that:
@@ -264,7 +265,7 @@ def test_process_new_user_join_event_with_notifications(mock_connection: MagicMo
 
 
 @patch("ts3.query.TS3Connection")
-def test_process_new_user_join_event_error_handling(mock_connection: MagicMock, test_teamspeak):
+def test_process_new_user_join_event_error_handling(mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test error handling during new user join event processing.
 
     Verifies that:
@@ -300,7 +301,7 @@ def test_process_new_user_join_event_error_handling(mock_connection: MagicMock, 
 
 @patch("ts3.query.TS3Connection")
 @patch("time.sleep")  # Mock sleep to speed up tests
-def test_connect_retry_mechanism(mock_sleep: MagicMock, mock_connection: MagicMock, test_teamspeak):
+def test_connect_retry_mechanism(mock_sleep: MagicMock, mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test the connection retry mechanism with exponential backoff.
 
     Verifies that:
@@ -318,9 +319,9 @@ def test_connect_retry_mechanism(mock_sleep: MagicMock, mock_connection: MagicMo
     ]
 
     # Set retry parameters for test
-    test_teamspeak.initial_retry_delay = 2
-    test_teamspeak.retry_backoff_factor = 2
-    test_teamspeak.max_retry_delay = 8
+    test_teamspeak.config.initial_retry_delay = 2
+    test_teamspeak.config.retry_backoff_factor = 2
+    test_teamspeak.config.max_retry_delay = 8
 
     # Attempt connection
     result = test_teamspeak._connect()
@@ -339,7 +340,7 @@ def test_connect_retry_mechanism(mock_sleep: MagicMock, mock_connection: MagicMo
 
 @patch("ts3.query.TS3Connection")
 @patch("time.sleep")
-def test_connect_retry_with_query_error(mock_sleep: MagicMock, mock_connection: MagicMock, test_teamspeak):
+def test_connect_retry_with_query_error(mock_sleep: MagicMock, mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test the connection retry mechanism with TS3QueryError.
 
     Verifies that:
@@ -361,9 +362,9 @@ def test_connect_retry_with_query_error(mock_sleep: MagicMock, mock_connection: 
     mock_connection.return_value = connection_instance
 
     # Set retry parameters
-    test_teamspeak.initial_retry_delay = 1
-    test_teamspeak.retry_backoff_factor = 2
-    test_teamspeak.max_retry_delay = 4
+    test_teamspeak.config.initial_retry_delay = 1
+    test_teamspeak.config.retry_backoff_factor = 2
+    test_teamspeak.config.max_retry_delay = 4
 
     # Attempt connection
     result = test_teamspeak._connect()
@@ -382,7 +383,7 @@ def test_connect_retry_with_query_error(mock_sleep: MagicMock, mock_connection: 
 
 @patch("ts3.query.TS3Connection")
 @patch("time.sleep")
-def test_connect_max_retry_delay(mock_sleep: MagicMock, mock_connection: MagicMock, test_teamspeak):
+def test_connect_max_retry_delay(mock_sleep: MagicMock, mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test that the retry delay is properly capped at max_retry_delay.
 
     Verifies that:
@@ -399,9 +400,9 @@ def test_connect_max_retry_delay(mock_sleep: MagicMock, mock_connection: MagicMo
     ]
 
     # Set retry parameters
-    test_teamspeak.initial_retry_delay = 1
-    test_teamspeak.retry_backoff_factor = 2
-    test_teamspeak.max_retry_delay = 4
+    test_teamspeak.config.initial_retry_delay = 1
+    test_teamspeak.config.retry_backoff_factor = 2
+    test_teamspeak.config.max_retry_delay = 4
 
     # Attempt connection
     result = test_teamspeak._connect()
@@ -419,7 +420,7 @@ def test_connect_max_retry_delay(mock_sleep: MagicMock, mock_connection: MagicMo
 
 
 @patch("ts3.query.TS3Connection")
-def test_connect_immediate_success(mock_connection: MagicMock, test_teamspeak):
+def test_connect_immediate_success(mock_connection: MagicMock, test_teamspeak: Teamspeak):
     """Test successful connection on first attempt.
 
     Verifies that:
@@ -440,8 +441,8 @@ def test_connect_immediate_success(mock_connection: MagicMock, test_teamspeak):
 
     # Verify proper connection sequence
     connection_instance.login.assert_called_once_with(
-        client_login_name=test_teamspeak.ts3_server_query_username,
-        client_login_password=test_teamspeak.ts3_server_query_passwd,
+        client_login_name=test_teamspeak.config.ts3_server_query_username,
+        client_login_password=test_teamspeak.config.ts3_server_query_passwd,
     )
     connection_instance.use.assert_called_once_with(sid=1)
     connection_instance.whoami.assert_called_once()
@@ -546,12 +547,12 @@ class TestTeamspeakConfig:
 
         # Test that optional sections are initialized with defaults
         assert isinstance(config.inactivity_monitoring, InactivityMonitoringConfig)
-        assert config.inactivity_monitoring.enabled is True
+        assert config.inactivity_monitoring.enabled is False
         assert config.inactivity_monitoring.afk_channel_id == 0
         assert config.inactivity_monitoring.inactivity_timeout_minutes == 30
 
         assert isinstance(config.chat, ChatConfig)
-        assert config.chat.enabled is True
+        assert config.chat.enabled is False
         assert config.chat.command_prefix == "!"
         assert config.chat.commands == {}
 
@@ -596,7 +597,7 @@ class TestTeamspeakConfig:
         assert config.inactivity_monitoring.inactivity_timeout_minutes == 30  # Default
 
         # Test chat with partial config
-        assert config.chat.enabled is True  # Default
+        assert config.chat.enabled is False  # Default
         assert config.chat.command_prefix == "#"
         assert config.chat.commands == {}  # Default
 
@@ -625,11 +626,11 @@ class TestTeamspeakConfig:
         config = TeamspeakConfig.from_dict(config_dict)
 
         # All optional sections should have default values
-        assert config.inactivity_monitoring.enabled is True
+        assert config.inactivity_monitoring.enabled is False
         assert config.inactivity_monitoring.afk_channel_id == 0
         assert config.inactivity_monitoring.inactivity_timeout_minutes == 30
 
-        assert config.chat.enabled is True
+        assert config.chat.enabled is False
         assert config.chat.command_prefix == "!"
         assert config.chat.commands == {}
 
@@ -740,6 +741,6 @@ class TestTeamspeakConfig:
         assert isinstance(config.new_user_alerting, NewUserAlertingConfig)
 
         # Verify default values
-        assert config.inactivity_monitoring.enabled is True
-        assert config.chat.enabled is True
-        assert config.new_user_alerting.new_user_message == "Welcome to the server!"
+        assert config.inactivity_monitoring.enabled is False
+        assert config.chat.enabled is False
+        assert config.new_user_alerting.enabled is False
