@@ -32,8 +32,7 @@ def mock_event_handler():
 
 
 @pytest.fixture
-@patch.object(Teamspeak, "load_config", autospec=True)
-def test_teamspeak(mock_load_config):
+def test_teamspeak():
     """Fixture that creates a test TeamSpeak instance with basic configuration.
 
     Returns:
@@ -65,13 +64,6 @@ def test_teamspeak(mock_load_config):
         },
     }
 
-    # Configure the mock to set up the attributes
-    def mock_load_config_impl(instance):
-        for key, value in test_config.items():
-            setattr(instance, key, value)
-
-    mock_load_config.side_effect = mock_load_config_impl
-
     ts = Teamspeak(plugin_name="Test_Teamspeak", config=test_config)
     return ts
 
@@ -89,7 +81,6 @@ def test_process_msg_in_channel_event(mock_connection: MagicMock, test_teamspeak
     }
 
     test_teamspeak.ts3conn = mock_connection
-    test_teamspeak.channel_id = 1
 
     event = {
         "msg": "$TestCommand1",
@@ -98,9 +89,9 @@ def test_process_msg_in_channel_event(mock_connection: MagicMock, test_teamspeak
         "invokername": "TestUser",
     }
 
-    test_teamspeak.process_msg_event(event)
+    test_teamspeak._process_msg_event(event)
     mock_connection.sendtextmessage.assert_called_with(
-        msg="TestResponse1", targetmode=ts3.definitions.TextMessageTargetMode.CHANNEL, target=test_teamspeak.channel_id
+        msg="TestResponse1", targetmode=ts3.definitions.TextMessageTargetMode.CHANNEL, target=test_teamspeak.bot_channel_id
     )
 
 
@@ -115,7 +106,7 @@ def test_process_new_user_join_event(mock_connection: MagicMock, test_teamspeak)
 
     event = {"cfid": 0, "ctid": 1, "clid": 5, "client_servergroups": "8"}
 
-    test_teamspeak.process_join_event(event)
+    test_teamspeak._process_join_event(event)
     mock_connection.sendtextmessage.assert_not_called()
 
 
@@ -130,13 +121,13 @@ def test_update_user_activity(mock_connection: MagicMock, test_teamspeak):
     test_teamspeak.ts3conn = mock_connection
 
     # Test updating activity for a new user
-    test_teamspeak.update_user_activity("123")
+    test_teamspeak._update_user_activity("123")
     assert "123" in test_teamspeak.user_activity_timestamps
     initial_timestamp = test_teamspeak.user_activity_timestamps["123"]
 
     # Test updating activity for an existing user
     time.sleep(0.1)  # Small delay to ensure different timestamp
-    test_teamspeak.update_user_activity("123")
+    test_teamspeak._update_user_activity("123")
     assert test_teamspeak.user_activity_timestamps["123"] > initial_timestamp
 
 
@@ -173,7 +164,7 @@ def test_check_inactive_users(mock_connection: MagicMock, test_teamspeak):
     }
 
     # Run the check
-    test_teamspeak.check_inactive_users()
+    test_teamspeak._check_inactive_users()
 
     # Verify that only the inactive user was moved
     mock_connection.clientmove.assert_called_once_with(cid=10, clid="2")
@@ -196,7 +187,7 @@ def test_inactivity_monitoring_disabled(mock_connection: MagicMock, test_teamspe
     test_teamspeak.enable_inactivity_monitoring = False
 
     # Run the check
-    test_teamspeak.check_inactive_users()
+    test_teamspeak._check_inactive_users()
 
     # Verify that no actions were taken
     mock_connection.clientlist.assert_not_called()
@@ -220,7 +211,7 @@ def test_process_event_updates_activity(mock_connection: MagicMock, test_teamspe
         "invokerid": "1",
         "invokername": "TestUser",
     }
-    test_teamspeak.process_event(msg_event)
+    test_teamspeak._process_event(msg_event)
     assert "1" in test_teamspeak.user_activity_timestamps
 
     # Test channel change event
@@ -229,7 +220,7 @@ def test_process_event_updates_activity(mock_connection: MagicMock, test_teamspe
         "ctid": "2",
         "clid": "2",
     }
-    test_teamspeak.process_event(channel_event)
+    test_teamspeak._process_event(channel_event)
     assert "2" in test_teamspeak.user_activity_timestamps
 
 
@@ -257,7 +248,7 @@ def test_process_new_user_join_event_with_notifications(mock_connection: MagicMo
     # Test event for a new user
     event = {"cfid": "0", "ctid": "1", "clid": "5", "client_servergroups": "8", "client_nickname": "NewUser"}
 
-    test_teamspeak.process_join_event(event)
+    test_teamspeak._process_join_event(event)
 
     # Verify welcome message was sent to new user
     welcome_call = mock_connection.sendtextmessage.call_args_list[0][1]
@@ -301,7 +292,7 @@ def test_process_new_user_join_event_error_handling(mock_connection: MagicMock, 
     event = {"cfid": "0", "ctid": "1", "clid": "5", "client_servergroups": "8", "client_nickname": "NewUser"}
 
     # This should not raise an exception
-    test_teamspeak.process_join_event(event)
+    test_teamspeak._process_join_event(event)
 
     # Verify that the error was logged (check the logs in a real environment)
     assert mock_connection.sendtextmessage.call_count > 0

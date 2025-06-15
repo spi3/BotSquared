@@ -20,6 +20,7 @@ import yaml
 # from bot_squared.integrator import plugin_event
 from bot_squared.integrator import plugin_event
 from bot_squared.plugins.plugin_base import PluginBase
+from bot_squared.plugins.teamspeak.teamspeak_config import TeamspeakConfig
 
 MAX_TIMEOUTS: int = 5
 INACTIVITY_CHECK_INTERVAL: int = 60  # seconds
@@ -40,7 +41,7 @@ class Teamspeak(PluginBase):
         super().__init__()
 
         self.plugin_name = plugin_name
-        self.config = config
+        self.config = TeamspeakConfig.from_dict(config)
 
         self.logger = logging.getLogger(__name__)
         self.logger.debug(f"Initializing TeamSpeak plugin with config: {config}")
@@ -62,7 +63,32 @@ class Teamspeak(PluginBase):
 
         self.logger.info("Teamspeak initializing...")
 
-        self._load_config()
+        # Load configuration from the dataclass config
+        # Load server connection details
+        self.ts3_server_ip = self.config.ts3_server_ip
+        self.ts3_server_query_username = self.config.ts3_server_query_username
+        self.ts3_server_query_passwd = self.config.ts3_server_query_passwd
+        self.ts3_server_id = self.config.ts3_server_id
+        self.bot_channel_id = self.config.bot_channel_id
+        self.iteration_rate_hz = self.config.iteration_rate_hz
+
+        # Load inactivity monitoring settings
+        inactivity_config = self.config.inactivity_monitoring
+        self.enable_inactivity_monitoring = inactivity_config.enabled
+        self.afk_channel_id = inactivity_config.afk_channel_id
+        self.inactivity_timeout_minutes = inactivity_config.inactivity_timeout_minutes
+
+        # Load chat settings
+        chat_config = self.config.chat
+        self.chat_enabled = chat_config.enabled
+        self.command_prefix = chat_config.command_prefix
+        self.commands = chat_config.commands
+
+        # Load new user alerting settings
+        new_user_config = self.config.new_user_alerting
+        self.new_user_message = new_user_config.new_user_message
+        self.new_user_inform_group = new_user_config.new_user_inform_group
+
         self.logger.debug(
             f"TeamSpeak plugin initialized with: iteration_rate={self.iteration_rate_hz}, "
             f"server={self.ts3_server_ip}, username={self.ts3_server_query_username}, "
@@ -437,58 +463,7 @@ class Teamspeak(PluginBase):
 
         if "response" in self.commands[command]:
             response = self.commands[command]["response"]
-            self.logger.debug(f"Sending command response to channel {self.channel_id}: {response}")
-            self.ts3conn.sendtextmessage(targetmode=event["targetmode"], target=self.channel_id, msg=response)
+            self.logger.debug(f"Sending command response to channel {self.bot_channel_id}: {response}")
+            self.ts3conn.sendtextmessage(targetmode=event["targetmode"], target=self.bot_channel_id, msg=response)
         else:
             self.logger.debug("Command has no response configured")
-
-    def _load_config(self):
-        """Load configuration from the config dictionary."""
-        # Load server connection details
-        self.ts3_server_ip = self.config["ts3_server_ip"]
-        self.ts3_server_query_username = self.config["ts3_server_query_username"]
-        self.ts3_server_query_passwd = self.config["ts3_server_query_passwd"]
-        self.ts3_server_id = self.config["ts3_server_id"]
-        self.bot_channel_id = self.config["bot_channel_id"]
-        self.iteration_rate_hz = self.config["iteration_rate_hz"]
-
-        # Load inactivity monitoring settings
-        inactivity_config = self.config.get("inactivity_monitoring", {})
-        self.enable_inactivity_monitoring = inactivity_config.get("enabled", True)
-        self.afk_channel_id = inactivity_config.get("afk_channel_id", 0)
-        self.inactivity_timeout_minutes = inactivity_config.get("inactivity_timeout_minutes", 30)
-
-        # Load chat settings
-        chat_config = self.config.get("chat", {})
-        self.chat_enabled = chat_config.get("enabled", True)
-        self.command_prefix = chat_config.get("command_prefix", "!")
-        self.commands = chat_config.get("commands", {})
-
-        # Load new user alerting settings
-        new_user_config = self.config.get("new_user_alerting", {})
-        self.new_user_message = new_user_config.get("new_user_message", "Welcome to the server!")
-        self.new_user_inform_group = new_user_config.get("new_user_inform_group", "Server Admin")
-
-    def load_config(self):
-        """Public method to load configuration."""
-        return self._load_config()
-
-    def process_event(self, event):
-        """Public method to process events."""
-        return self._process_event(event)
-
-    def process_join_event(self, event):
-        """Public method to process join events."""
-        return self._process_join_event(event)
-
-    def process_msg_event(self, event):
-        """Public method to process message events."""
-        return self._process_msg_event(event)
-
-    def update_user_activity(self, client_id: str):
-        """Public method to update user activity."""
-        return self._update_user_activity(client_id)
-
-    def check_inactive_users(self):
-        """Public method to check inactive users."""
-        return self._check_inactive_users()
