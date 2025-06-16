@@ -59,6 +59,7 @@ def test_teamspeak():
             },
         },
         "new_user_alerting": {
+            "enabled": True,
             "new_user_message": "Welcome to the server!",
             "new_user_inform_group": "Server Admin",
         },
